@@ -17,8 +17,8 @@ export default function LoginPage() {
   const router = useRouter();
   const auth = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState('customer@example.com');
-  const [password, setPassword] = useState('password');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -30,7 +30,7 @@ export default function LoginPage() {
     } catch (error: any) {
         toast({
             title: "Login Failed",
-            description: "Invalid email or password.",
+            description: "Invalid email or password. Please make sure you have registered first.",
             variant: "destructive",
         })
     } finally {
@@ -45,9 +45,7 @@ export default function LoginPage() {
           <Logo className="mb-4 justify-center" />
           <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
           <CardDescription>
-            Enter your email to login.
-            <br />
-            <small> (e.g. farmer@example.com, customer@example.com)</small>
+            Enter your email and password to log in.
           </CardDescription>
         </CardHeader>
         <CardContent>

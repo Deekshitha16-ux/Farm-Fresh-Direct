@@ -12,7 +12,7 @@ import { Logo } from "@/components/logo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { doc, serverTimestamp } from "firebase/firestore";
+import { doc } from "firebase/firestore";
 import type { UserProfile } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -74,7 +74,7 @@ export default function RegisterPage() {
         <CardHeader className="text-center">
           <Logo className="mb-4 justify-center" />
           <CardTitle className="font-headline text-2xl">Create an Account</CardTitle>
-          <CardDescription>Join our community of farmers and fresh food lovers.</CardDescription>
+          <CardDescription>Join our community. For the demo, try registering with 'farmer@example.com' or 'customer@example.com'.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="grid gap-4">
