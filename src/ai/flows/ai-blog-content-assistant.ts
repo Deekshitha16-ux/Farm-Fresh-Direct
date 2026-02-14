@@ -4,7 +4,7 @@
  *
  * - aiBlogContentAssistant - A function that suggests blog content ideas and generates draft blog posts.
  * - AiBlogContentAssistantInput - The input type for the aiBlogContentAssistant function.
- * - AiBlogContentAssistantOutput - The return type for the aiBlogContentAssistant function.
+ * - AiBlogContentAssistantOutput - The return type for the aiBlogContent-assistant function.
  */
 
 import {ai} from '@/ai/genkit';
@@ -52,9 +52,34 @@ const blogAssistantPrompt = ai.definePrompt({
   input: {schema: AiBlogContentAssistantInputSchema},
   output: {
     schema: AiBlogContentAssistantOutputSchema,
-    format: 'json',
   },
-  prompt: `You are an AI-powered blog assistant for a farmer. Your goal is to help the farmer create engaging marketing content to attract more customers.\n\nBased on the farm's produce, target customer segments, and regional events, you need to:\n1.  Suggest 3-5 relevant and attractive blog post ideas.\n2.  Generate a draft blog post for one of these ideas (or a general relevant topic).\n\nFarm Produce:\n{{#each farmProduce}}\n- {{{this}}}\n{{/each}}\n\nTarget Customer Segments:\n{{#each customerSegments}}\n- {{{this}}}\n{{/each}}\n\nRegional Events:\n{{#each regionalEvents}}\n- {{{this}}}\n{{/each}}\n\n{{#if topicPreference}}\nThe farmer has expressed a preference for content related to: {{{topicPreference}}}. Please consider this preference when generating ideas and the draft post.\n{{/if}}\n\nYou must respond with a JSON object.`,
+  prompt: `You are an AI-powered blog assistant for a farmer. Your task is to generate blog content ideas and a draft post.
+
+You will be given the farm's produce, target customers, and regional events.
+Based on this information, you must:
+1. Suggest three to five engaging blog post ideas.
+2. Generate a complete draft blog post for one of the suggested ideas.
+
+Farm Produce:
+{{#each farmProduce}}
+- {{{this}}}
+{{/each}}
+
+Target Customer Segments:
+{{#each customerSegments}}
+- {{{this}}}
+{{/each}}
+
+Regional Events:
+{{#each regionalEvents}}
+- {{{this}}}
+{{/each}}
+
+{{#if topicPreference}}
+The farmer has a topic preference: {{{topicPreference}}}. Prioritize this when generating content.
+{{/if}}
+
+Your response MUST be a valid JSON object that conforms to the output schema. Do not include any other text or explanations before or after the JSON object.`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
