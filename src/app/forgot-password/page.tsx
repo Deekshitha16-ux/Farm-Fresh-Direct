@@ -3,24 +3,22 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
-import { initializeFirebase } from "@/firebase";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const auth = useAuth();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Memoize firebase services to avoid re-initialization on every render
-  const { auth } = useMemo(() => initializeFirebase(), []);
 
   const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
