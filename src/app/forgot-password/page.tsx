@@ -3,28 +3,54 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { useToast } from "@/hooks/use-toast";
+import { sendPasswordResetEmail } from "firebase/auth";
+import { initializeFirebase } from "@/firebase";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [email, setEmail] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleReset = (e: React.FormEvent) => {
+  // Memoize firebase services to avoid re-initialization on every render
+  const { auth } = useMemo(() => initializeFirebase(), []);
+
+  const handleReset = async (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would trigger a password reset email.
-    // For this prototype, we'll show a toast notification.
-    toast({
-        title: "Password Reset Link Sent",
-        description: `If an account with ${email} exists, you will receive a password reset link shortly.`,
-    });
-    router.push('/login');
+    if (!email) {
+      toast({
+        title: "Email is required",
+        description: "Please enter your email address.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setIsLoading(true);
+
+    try {
+        await sendPasswordResetEmail(auth, email);
+        toast({
+            title: "Password Reset Link Sent",
+            description: `If an account with ${email} exists, a password reset link has been sent.`,
+        });
+        router.push('/login');
+    } catch (error: any) {
+        console.error("Password Reset Error: ", error);
+        toast({
+            title: "Error Sending Reset Link",
+            description: error.message || "An unknown error occurred. Please try again.",
+            variant: "destructive",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -46,10 +72,11 @@ export default function ForgotPasswordPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Send Reset Link
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Sending..." : "Send Reset Link"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

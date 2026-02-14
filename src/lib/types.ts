@@ -1,3 +1,4 @@
+
 export type Product = {
   id: string;
   name: string;
@@ -35,13 +36,16 @@ export type BlogPost = {
   imageUrl?: string;
 };
 
-export type User = {
-    id: string;
-    name: string;
-    email: string;
-    role: 'farmer' | 'customer';
-    farmName?: string;
-    farmDetails?: string;
+export type UserProfile = {
+  id: string;
+  displayName: string;
+  email: string;
+  userType: 'farmer' | 'customer';
+  createdAt: string;
+  updatedAt?: string;
+  // Farmer specific
+  farmName?: string;
+  farmDetails?: string;
 };
 
 export type CartItem = {

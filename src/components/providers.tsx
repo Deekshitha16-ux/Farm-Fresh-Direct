@@ -5,62 +5,10 @@ import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
 import { ProductsContext } from "@/hooks/use-products";
 import { BlogContext } from "@/hooks/use-blog";
-import type { Product, CartItem, User, BlogPost } from '@/lib/types';
+import type { Product, CartItem, BlogPost } from '@/lib/types';
 import { DUMMY_PRODUCTS, DUMMY_BLOG_POSTS } from "@/lib/dummy-data";
 import type { ProductsAction } from "@/hooks/use-products";
 import type { BlogAction } from "@/hooks/use-blog";
-import { AuthContext, authReducer } from "@/hooks/use-auth";
-
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(authReducer, { user: null });
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    try {
-      const storedUser = sessionStorage.getItem('user');
-      if (storedUser) {
-        dispatch({ type: "LOGIN", payload: JSON.parse(storedUser) });
-      }
-    } catch (error) {
-      console.error("Failed to parse user from sessionStorage", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      try {
-        if (state.user) {
-          sessionStorage.setItem('user', JSON.stringify(state.user));
-        } else {
-          sessionStorage.removeItem('user');
-        }
-      } catch (error) {
-        console.error("Failed to save user to sessionStorage", error);
-      }
-    }
-  }, [state.user, isClient]);
-
-  const login = (user: User) => {
-    dispatch({ type: 'LOGIN', payload: user });
-  };
-
-  const logout = () => {
-    dispatch({ type: 'LOGOUT' });
-  };
-
-  const updateUser = (userData: Partial<User>) => {
-    dispatch({ type: 'UPDATE_USER', payload: userData });
-  };
-  
-  const user = isClient ? state.user : null;
-
-  return (
-    <AuthContext.Provider value={{ state, login, logout, updateUser, user }}>
-      {children}
-    </AuthContext.Provider>
-  );
-}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { cart: [] });
@@ -282,14 +230,12 @@ export function BlogProvider({ children }: { children: ReactNode }) {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
-        <CartProvider>
-            <ProductsProvider>
-                <BlogProvider>
-                    {children}
-                </BlogProvider>
-            </ProductsProvider>
-        </CartProvider>
-    </AuthProvider>
+    <CartProvider>
+        <ProductsProvider>
+            <BlogProvider>
+                {children}
+            </BlogProvider>
+        </ProductsProvider>
+    </CartProvider>
   );
 }

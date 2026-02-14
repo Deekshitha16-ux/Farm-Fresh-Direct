@@ -1,28 +1,71 @@
+
 'use client';
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { useAuth } from "@/hooks/use-auth";
-import { DUMMY_USERS } from "@/lib/dummy-data";
+import { useAuth, useFirestore, setDocumentNonBlocking } from "@/firebase";
+import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
+import { doc, serverTimestamp } from "firebase/firestore";
+import type { UserProfile } from "@/lib/types";
+import { useToast } from "@/hooks/use-toast";
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const auth = useAuth();
+  const firestore = useFirestore();
+  const { toast } = useToast();
 
-  const handleRegister = (e: React.FormEvent) => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userType, setUserType] = useState<"customer" | "farmer">("customer");
+
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-     // For prototype, log in as dummy customer user.
-    const customerUser = DUMMY_USERS.find(u => u.role === 'customer');
-    if (customerUser) {
-        login(customerUser);
+    setIsLoading(true);
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await updateProfile(user, { displayName: fullName });
+
+      const userProfile: UserProfile = {
+        id: user.uid,
+        displayName: fullName,
+        email: user.email!,
+        userType: userType,
+        createdAt: new Date().toISOString(),
+      };
+      
+      const userDocRef = doc(firestore, 'users', user.uid);
+      setDocumentNonBlocking(userDocRef, userProfile, {});
+
+      toast({
+        title: "Account Created!",
+        description: "Welcome to Farm Fresh Direct.",
+      });
+
+      router.push('/dashboard');
+
+    } catch (error: any) {
+      console.error("Registration Error: ", error);
+      toast({
+        title: "Registration Failed",
+        description: error.message || "An unknown error occurred.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
-    router.push('/dashboard');
   };
 
   return (
@@ -37,7 +80,12 @@ export default function RegisterPage() {
           <form onSubmit={handleRegister} className="grid gap-4">
             <div className="grid gap-2">
                 <Label>I am a...</Label>
-                <RadioGroup defaultValue="customer" className="grid grid-cols-2 gap-4">
+                <RadioGroup 
+                    defaultValue="customer" 
+                    className="grid grid-cols-2 gap-4"
+                    onValueChange={(value: "customer" | "farmer") => setUserType(value)}
+                    disabled={isLoading}
+                >
                   <div>
                     <RadioGroupItem value="customer" id="customer" className="peer sr-only" />
                     <Label
@@ -60,7 +108,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full Name</Label>
-              <Input id="full-name" placeholder="John Doe" required />
+              <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={e => setFullName(e.target.value)} disabled={isLoading}/>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
@@ -69,14 +117,17 @@ export default function RegisterPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" required value={password} onChange={e => setPassword(e.target.value)} disabled={isLoading}/>
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create an account"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

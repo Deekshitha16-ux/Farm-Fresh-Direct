@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from "next/link";
@@ -7,31 +8,33 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
-import { useAuth } from "@/hooks/use-auth";
-import { DUMMY_USERS } from "@/lib/dummy-data";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/firebase";
+import { signInWithEmailAndPassword } from "firebase/auth";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useAuth();
+  const auth = useAuth();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('customer@example.com');
+  const [password, setPassword] = useState('password');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const userToLogin = DUMMY_USERS.find(u => u.email === email);
-    
-    if (userToLogin) {
-        login(userToLogin);
+    setIsLoading(true);
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
         router.push('/dashboard');
-    } else {
+    } catch (error: any) {
         toast({
             title: "Login Failed",
             description: "Invalid email or password.",
             variant: "destructive",
         })
+    } finally {
+        setIsLoading(false);
     }
   }
 
@@ -58,6 +61,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={e => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="grid gap-2">
@@ -76,10 +80,11 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Logging in..." : "Login"}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">

@@ -1,8 +1,10 @@
+
 import type { Metadata } from 'next';
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { Providers } from '@/components/providers';
 import { Toaster } from '@/components/ui/toaster';
+import { FirebaseClientProvider } from '@/firebase';
 
 export const metadata: Metadata = {
   title: 'Farm Fresh Direct',
@@ -31,10 +33,12 @@ export default function RootLayout({
       <body
         className={cn('min-h-screen bg-background font-body antialiased')}
       >
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <FirebaseClientProvider>
+          <Providers>
+            {children}
+            <Toaster />
+          </Providers>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

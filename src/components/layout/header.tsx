@@ -1,8 +1,9 @@
+
 "use client";
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,9 +16,9 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Menu, ShoppingCart } from "lucide-react";
 import { Logo } from "@/components/logo";
 import { useCart } from "@/hooks/use-cart";
-import { useAuth } from "@/hooks/use-auth";
+import { useUser, useAuth } from "@/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { cn } from "@/lib/utils";
+import { signOut } from "firebase/auth";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -28,12 +29,13 @@ const navLinks = [
 
 export function Header() {
   const { cart } = useCart();
-  const { user, logout } = useAuth();
+  const { user } = useUser();
+  const auth = useAuth();
   const router = useRouter();
   const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut(auth);
     router.push('/login');
   };
 
@@ -53,8 +55,8 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon" className="relative">
-            <Link href="/cart">
+          <Link href="/cart" passHref>
+            <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart className="h-5 w-5" />
               {itemCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
@@ -62,23 +64,23 @@ export function Header() {
                 </span>
               )}
               <span className="sr-only">Shopping Cart</span>
-            </Link>
-          </Button>
+            </Button>
+          </Link>
 
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
-                    <AvatarImage src={`https://picsum.photos/seed/${user.name}/40/40`} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
+                    <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/40/40`} alt={user.displayName || ""} />
+                    <AvatarFallback>{user.displayName?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none">{user.displayName}</p>
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
