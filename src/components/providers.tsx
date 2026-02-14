@@ -12,6 +12,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { cart: [] });
   const [hydrated, setHydrated] = useState(false);
 
+  // Load cart from localStorage on mount
   useEffect(() => {
     try {
       const storedCart = localStorage.getItem('cart');
@@ -23,11 +24,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Failed to parse cart from localStorage", error);
-    } finally {
-      setHydrated(true);
     }
+    setHydrated(true); // Signal that hydration is complete
   }, []);
 
+  // Save cart to localStorage on change
   useEffect(() => {
     if (hydrated) {
       try {
@@ -56,13 +57,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const totalPrice = state.cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   
-  const cartForValue = hydrated ? state.cart : [];
-  const totalPriceForValue = hydrated ? totalPrice : 0;
-  const stateForValue = hydrated ? state : { cart: [] };
-
+  // On initial client render, we return an empty cart to match the server
+  if (!hydrated) {
+    return (
+      <CartContext.Provider value={{ state: { cart: [] }, addToCart, updateQuantity, removeFromCart, cart: [], totalPrice: 0 }}>
+        {children}
+      </CartContext.Provider>
+    )
+  }
 
   return (
-    <CartContext.Provider value={{ state: stateForValue, addToCart, updateQuantity, removeFromCart, cart: cartForValue, totalPrice: totalPriceForValue }}>
+    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, cart: state.cart, totalPrice }}>
       {children}
     </CartContext.Provider>
   );
@@ -74,6 +79,16 @@ const productsReducer = (state: { products: Product[] }, action: ProductsAction)
       return {
         ...state,
         products: [action.payload, ...state.products],
+      };
+    case 'UPDATE_PRODUCT':
+        return {
+            ...state,
+            products: state.products.map(p => p.id === action.payload.productId ? { ...p, ...action.payload.productData } : p)
+        }
+    case 'REMOVE_PRODUCT':
+      return {
+        ...state,
+        products: state.products.filter(p => p.id !== action.payload.productId),
       };
     case 'SET_PRODUCTS':
       return { ...state, products: action.payload };
@@ -91,7 +106,7 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
       const storedProducts = localStorage.getItem('products');
       if (storedProducts) {
         const parsedState = JSON.parse(storedProducts);
-        if (parsedState.products) {
+        if (parsedState.products && parsedState.products.length > 0) {
           dispatch({ type: "SET_PRODUCTS", payload: parsedState.products });
         }
       }
@@ -130,11 +145,19 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'ADD_PRODUCT', payload: newProduct });
   };
   
+  const updateProduct = (productId: string, productData: Partial<Product>) => {
+    dispatch({ type: 'UPDATE_PRODUCT', payload: { productId, productData } });
+  };
+
+  const removeProduct = (productId: string) => {
+    dispatch({ type: 'REMOVE_PRODUCT', payload: { productId } });
+  };
+
   const productsForValue = hydrated ? state.products : DUMMY_PRODUCTS;
   const stateForValue = hydrated ? state : { products: DUMMY_PRODUCTS };
 
   return (
-    <ProductsContext.Provider value={{ state: stateForValue, addProduct, products: productsForValue }}>
+    <ProductsContext.Provider value={{ state: stateForValue, addProduct, updateProduct, removeProduct, products: productsForValue }}>
       {children}
     </ProductsContext.Provider>
   );

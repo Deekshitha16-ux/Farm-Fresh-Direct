@@ -10,11 +10,16 @@ type ProductsState = {
 
 export type ProductsAction =
   | { type: 'ADD_PRODUCT'; payload: Product }
-  | { type: 'SET_PRODUCTS'; payload: Product[] };
+  | { type: 'SET_PRODUCTS'; payload: Product[] }
+  | { type: 'REMOVE_PRODUCT'; payload: { productId: string } }
+  | { type: 'UPDATE_PRODUCT'; payload: { productId: string, productData: Partial<Product> } };
+
 
 export const ProductsContext = createContext<{
   state: ProductsState;
   addProduct: (product: Partial<Product>) => void;
+  updateProduct: (productId: string, productData: Partial<Product>) => void;
+  removeProduct: (productId: string) => void;
   products: Product[];
 } | undefined>(undefined);
 
