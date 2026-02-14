@@ -37,12 +37,12 @@ const AiBlogContentAssistantOutputSchema = z.object({
   suggestedIdeas: z
     .array(z.string())
     .describe(
-      'A list of engaging blog post ideas tailored to the farm, customers, and events.'
+      'A list of 3-5 engaging blog post ideas tailored to the farm, customers, and events.'
     ),
   draftBlogPost: z
     .string()
     .describe(
-      'A draft blog post, generated based on one of the suggested ideas or a general relevant topic.'
+      'A draft blog post of at least 3 paragraphs, generated based on one of the suggested ideas or a general relevant topic.'
     ),
 });
 export type AiBlogContentAssistantOutput = z.infer<typeof AiBlogContentAssistantOutputSchema>;
@@ -53,14 +53,11 @@ const blogAssistantPrompt = ai.definePrompt({
   output: {
     schema: AiBlogContentAssistantOutputSchema,
   },
-  prompt: `You are an AI-powered blog assistant for a farmer. Your task is to generate blog content ideas and a draft post.
+  prompt: `You are an AI-powered blog assistant for a farmer.
+Your task is to generate blog content ideas and a draft post based on the provided information.
 
-First, you will be given information about the farm's produce, target customers, and regional events.
-Analyze this information carefully.
-
-Based on your analysis, you must perform two tasks:
-1.  Suggest three to five engaging blog post ideas that are relevant and appealing.
-2.  Choose one of your suggested ideas (or the farmer's preferred topic if provided) and write a complete, well-structured draft blog post of at least 3 paragraphs.
+Suggest three to five engaging blog post ideas.
+Then, choose one of those ideas (or the farmer's preferred topic if provided) and write a complete, well-structured draft blog post of at least 3 paragraphs.
 
 The provided information is:
 -   **Farm Produce:**
@@ -80,15 +77,7 @@ The provided information is:
 
 {{#if topicPreference}}
 -   **Farmer's Topic Preference:** {{{topicPreference}}}. You should prioritize this topic for the draft blog post.
-{{/if}}
-
-IMPORTANT: Your final output must be a single, valid JSON object that strictly adheres to the following structure. Do not add any text or formatting outside of this JSON object.
-{
-  "suggestedIdeas": [
-    "string"
-  ],
-  "draftBlogPost": "string"
-}`,
+{{/if}}`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
