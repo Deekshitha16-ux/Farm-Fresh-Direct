@@ -1,4 +1,7 @@
+'use client';
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,6 +10,13 @@ import { Logo } from "@/components/logo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 export default function RegisterPage() {
+  const router = useRouter();
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault();
+    router.push('/dashboard');
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-secondary/50 p-4">
       <Card className="w-full max-w-md">
@@ -16,7 +26,7 @@ export default function RegisterPage() {
           <CardDescription>Join our community of farmers and fresh food lovers.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4">
+          <form onSubmit={handleRegister} className="grid gap-4">
             <div className="grid gap-2">
                 <Label>I am a...</Label>
                 <RadioGroup defaultValue="customer" className="grid grid-cols-2 gap-4">
@@ -55,7 +65,7 @@ export default function RegisterPage() {
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" />
+              <Input id="password" type="password" required />
             </div>
             <Button type="submit" className="w-full">
               Create an account
