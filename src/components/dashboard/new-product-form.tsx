@@ -1,8 +1,9 @@
 
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,11 +16,13 @@ import { useUserProfile } from '@/hooks/use-user-profile';
 import { addDocumentNonBlocking, useFirestore } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import type { Product } from '@/lib/types';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Info } from 'lucide-react';
 
 export function NewProductForm() {
     const { toast } = useToast();
     const router = useRouter();
-    const { user } = useUserProfile();
+    const { user, isLoading: isUserLoading } = useUserProfile();
     const firestore = useFirestore();
 
     // Form State
@@ -30,14 +33,9 @@ export function NewProductForm() {
     const [unit, setUnit] = useState("lb");
     const [stock, setStock] = useState("");
     const [category, setCategory] = useState("");
-    const [origin, setOrigin] = useState("");
     const [isSaving, setIsSaving] = useState(false);
 
-    useEffect(() => {
-        if (user?.farmName) {
-            setOrigin(user.farmName);
-        }
-    }, [user?.farmName]);
+    const origin = user?.farmName || "";
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -57,7 +55,7 @@ export function NewProductForm() {
         setIsSaving(true);
 
         if (!user || user.role !== 'farmer' || !origin) {
-            toast({ title: "Error", description: "You must be a farmer and specify an origin to add products.", variant: "destructive" });
+            toast({ title: "Farm Name Required", description: "Please set your farm name in settings before adding products.", variant: "destructive" });
             setIsSaving(false);
             return;
         }
@@ -96,6 +94,23 @@ export function NewProductForm() {
         }).finally(() => {
             setIsSaving(false);
         });
+    }
+
+    if (isUserLoading) {
+        return <p>Loading user profile...</p>;
+    }
+
+    if (user && user.role === 'farmer' && !user.farmName) {
+        return (
+            <Alert>
+                <Info className="h-4 w-4" />
+                <AlertTitle>Farm Name Required</AlertTitle>
+                <AlertDescription>
+                    You need to set a farm name before you can add products. Please go to your{" "}
+                    <Link href="/dashboard/settings" className="font-bold underline">settings</Link> to update your profile.
+                </AlertDescription>
+            </Alert>
+        );
     }
 
     return (
@@ -151,7 +166,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} onChange={(e) => setOrigin(e.target.value)} required />
+                                <Input id="origin" value={origin} required readOnly className="bg-muted/50" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
@@ -170,7 +185,7 @@ export function NewProductForm() {
                         </div>
                     </div>
                     <div className="mt-8 flex justify-end">
-                        <Button type="submit" disabled={isSaving}>
+                        <Button type="submit" disabled={isSaving || !origin}>
                             {isSaving ? 'Saving...' : 'Save Product'}
                         </Button>
                     </div>
