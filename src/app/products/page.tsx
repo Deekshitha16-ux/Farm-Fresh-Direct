@@ -1,16 +1,21 @@
+
+"use client";
+
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { ProductCard } from "@/components/products/product-card";
-import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useProducts } from "@/hooks/use-products";
 
 const categories = ["All", "Fruits", "Vegetables"];
 const farmers = ["All", "Green Valley Farms", "Sunrise Organics", "Oakwood Gardens"];
 
 export default function ProductsPage() {
+  const { products } = useProducts();
+
   return (
     <div className="flex min-h-screen flex-col">
       <Header />
@@ -53,7 +58,7 @@ export default function ProductsPage() {
             </aside>
             <div className="md:col-span-3">
               <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">Showing {DUMMY_PRODUCTS.length} products</p>
+                <p className="text-sm text-muted-foreground">Showing {products.length} products</p>
                 <Select>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Sort by" />
@@ -67,7 +72,7 @@ export default function ProductsPage() {
                 </Select>
               </div>
               <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {DUMMY_PRODUCTS.map((product) => (
+                {products.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}
               </div>

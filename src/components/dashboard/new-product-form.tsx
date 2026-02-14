@@ -13,16 +13,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { generateDescription } from "@/lib/actions";
+import { useProducts } from '@/hooks/use-products';
+import type { Product } from '@/lib/types';
 
 export function NewProductForm() {
     const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
-    const [description, setDescription] = useState("");
+    const router = useRouter();
+    const { addProduct } = useProducts();
+
+    // Form State
     const [produceType, setProduceType] = useState("");
-    const [origin, setOrigin] = useState("");
+    const [description, setDescription] = useState("");
     const [uniqueQualities, setUniqueQualities] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
-    const router = useRouter();
+    const [price, setPrice] = useState("");
+    const [unit, setUnit] = useState("");
+    const [stock, setStock] = useState("");
+    const [origin, setOrigin] = useState("");
+    const [category, setCategory] = useState("");
+
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -73,6 +83,19 @@ export function NewProductForm() {
 
     const handleSaveProduct = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const newProduct: Partial<Product> = {
+            name: produceType,
+            description,
+            price: parseFloat(price) || 0,
+            unit,
+            stock: parseInt(stock, 10) || 0,
+            farmer: origin, // Using origin for farmer name
+            category,
+        };
+
+        addProduct(newProduct);
+        
         toast({
             title: "Product Saved",
             description: `"${produceType}" has been saved successfully.`,
@@ -130,11 +153,11 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="price">Price</Label>
-                                <Input id="price" type="number" placeholder="2.99" step="0.01" required />
+                                <Input id="price" type="number" placeholder="2.99" step="0.01" value={price} onChange={e => setPrice(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="unit">Unit</Label>
-                                <Select>
+                                <Select value={unit} onValueChange={setUnit}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a unit" />
                                     </SelectTrigger>
@@ -148,7 +171,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="stock">Stock Quantity</Label>
-                                <Input id="stock" type="number" placeholder="100" required/>
+                                <Input id="stock" type="number" placeholder="100" value={stock} onChange={e => setStock(e.target.value)} required/>
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
@@ -156,15 +179,15 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select>
+                                <Select value={category} onValueChange={setCategory}>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="fruits">Fruits</SelectItem>
-                                        <SelectItem value="vegetables">Vegetables</SelectItem>
-                                        <SelectItem value="dairy">Dairy</SelectItem>
-                                        <SelectItem value="other">Other</SelectItem>
+                                        <SelectItem value="Fruits">Fruits</SelectItem>
+                                        <SelectItem value="Vegetables">Vegetables</SelectItem>
+                                        <SelectItem value="Dairy">Dairy</SelectItem>
+                                        <SelectItem value="Other">Other</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

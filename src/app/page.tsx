@@ -1,3 +1,6 @@
+
+"use client";
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -7,11 +10,13 @@ import { ArrowRight, Leaf, Tractor, Users } from 'lucide-react';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
 import { ProductCard } from '@/components/products/product-card';
-import { DUMMY_PRODUCTS, DUMMY_REVIEWS } from '@/lib/dummy-data';
+import { DUMMY_REVIEWS } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { useProducts } from '@/hooks/use-products';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'hero-farm');
+  const { products } = useProducts();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -77,7 +82,7 @@ export default function Home() {
               Hand-picked selections from our best farms.
             </p>
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {DUMMY_PRODUCTS.slice(0, 4).map((product) => (
+              {products.slice(0, 4).map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

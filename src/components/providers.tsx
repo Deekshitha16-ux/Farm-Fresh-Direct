@@ -3,8 +3,10 @@
 
 import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
+import { ProductsContext, useProducts } from "@/hooks/use-products";
 import type { Product, CartItem } from '@/lib/types';
-
+import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
+import type { ProductsAction } from "@/hooks/use-products";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { cart: [] });
@@ -66,6 +68,84 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const productsReducer = (state: { products: Product[] }, action: ProductsAction): { products: Product[] } => {
+  switch (action.type) {
+    case 'ADD_PRODUCT':
+      return {
+        ...state,
+        products: [action.payload, ...state.products],
+      };
+    case 'SET_PRODUCTS':
+      return { ...state, products: action.payload };
+    default:
+      return state;
+  }
+};
+
+export function ProductsProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(productsReducer, { products: DUMMY_PRODUCTS });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedProducts = localStorage.getItem('products');
+      if (storedProducts) {
+        const parsedState = JSON.parse(storedProducts);
+        if (parsedState.products) {
+          dispatch({ type: "SET_PRODUCTS", payload: parsedState.products });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse products from localStorage", error);
+    } finally {
+      setHydrated(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      try {
+        localStorage.setItem('products', JSON.stringify(state));
+      } catch (error) {
+        console.error("Failed to save products to localStorage", error);
+      }
+    }
+  }, [state, hydrated]);
+
+  const addProduct = (productData: Partial<Product>) => {
+    const newProduct: Product = {
+      id: new Date().getTime().toString(),
+      name: productData.name || '',
+      description: productData.description || '',
+      price: productData.price || 0,
+      unit: productData.unit || 'lb',
+      stock: productData.stock || 0,
+      farmer: productData.farmer || 'My Farm',
+      category: productData.category || 'Uncategorized',
+      rating: 0,
+      reviewCount: 0,
+      imageId: 'new-product-placeholder',
+    };
+    dispatch({ type: 'ADD_PRODUCT', payload: newProduct });
+  };
+  
+  const productsForValue = hydrated ? state.products : DUMMY_PRODUCTS;
+  const stateForValue = hydrated ? state : { products: DUMMY_PRODUCTS };
+
+  return (
+    <ProductsContext.Provider value={{ state: stateForValue, addProduct, products: productsForValue }}>
+      {children}
+    </ProductsContext.Provider>
+  );
+}
+
+
 export function Providers({ children }: { children: ReactNode }) {
-  return <CartProvider>{children}</CartProvider>;
+  return (
+    <CartProvider>
+      <ProductsProvider>
+        {children}
+      </ProductsProvider>
+    </CartProvider>
+  );
 }

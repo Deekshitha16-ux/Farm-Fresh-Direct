@@ -1,4 +1,6 @@
-import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
+
+"use client";
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
@@ -7,8 +9,11 @@ import { MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useProducts } from "@/hooks/use-products";
 
 export function ProductsTable() {
+    const { products } = useProducts();
+
     return (
         <Card>
             <CardHeader>
@@ -32,7 +37,7 @@ export function ProductsTable() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {DUMMY_PRODUCTS.map(product => {
+                        {products.map(product => {
                             const productImage = PlaceHolderImages.find(p => p.id === product.imageId);
                             return (
                                 <TableRow key={product.id}>

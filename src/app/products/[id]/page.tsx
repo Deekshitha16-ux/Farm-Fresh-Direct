@@ -1,9 +1,10 @@
+
 "use client";
 
 import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { DUMMY_PRODUCTS, DUMMY_REVIEWS } from '@/lib/dummy-data';
+import { DUMMY_REVIEWS } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -14,13 +15,15 @@ import { RatingStars } from '@/components/products/rating-stars';
 import { Minus, Plus } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
+import { useProducts } from '@/hooks/use-products';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { products } = useProducts();
   
-  const product = DUMMY_PRODUCTS.find((p) => p.id === params.id);
+  const product = products.find((p) => p.id === params.id);
   
   if (!product) {
     notFound();
