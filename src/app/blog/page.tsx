@@ -48,13 +48,16 @@ export default function BlogPage() {
             return;
         }
 
+        const blogImageIds = ['blog-gardening', 'blog-recipes', 'farmer-market'];
+        const randomImageId = blogImageIds[Math.floor(Math.random() * blogImageIds.length)];
+
         const newPost: Omit<BlogPost, 'id' | 'date'> = {
             title,
             excerpt,
             content,
             slug: slugify(title),
             author: user.name,
-            imageId: 'blog-gardening', // Keep a generic placeholder
+            imageId: randomImageId,
         };
 
         addPost(newPost);
