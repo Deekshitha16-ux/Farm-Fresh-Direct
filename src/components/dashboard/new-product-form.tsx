@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,6 +22,7 @@ export function NewProductForm() {
     const [origin, setOrigin] = useState("");
     const [uniqueQualities, setUniqueQualities] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
+    const router = useRouter();
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -69,6 +71,15 @@ export function NewProductForm() {
         }
     };
 
+    const handleSaveProduct = (e: React.FormEvent) => {
+        e.preventDefault();
+        toast({
+            title: "Product Saved",
+            description: `"${produceType}" has been saved successfully.`,
+        });
+        router.push('/dashboard/products');
+    }
+
 
     return (
         <Card>
@@ -77,90 +88,92 @@ export function NewProductForm() {
                 <CardDescription>Provide the necessary information for your new product.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-                    <div className="md:col-span-2 grid gap-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="product-name">Product Name</Label>
-                            <Input id="product-name" placeholder="e.g., Organic Apples" value={produceType} onChange={(e) => setProduceType(e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="description">Description</Label>
-                            <div className="relative">
-                                <Textarea id="description" placeholder="A detailed description of your product." value={description} onChange={e => setDescription(e.target.value)} rows={5} />
-                                <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="absolute bottom-2 right-2"
-                                    onClick={handleGenerateDescription}
-                                    disabled={isGenerating}
-                                >
-                                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                    Generate
-                                </Button>
+                <form onSubmit={handleSaveProduct}>
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                        <div className="md:col-span-2 grid gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-name">Product Name</Label>
+                                <Input id="product-name" placeholder="e.g., Organic Apples" value={produceType} onChange={(e) => setProduceType(e.target.value)} required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="description">Description</Label>
+                                <div className="relative">
+                                    <Textarea id="description" placeholder="A detailed description of your product." value={description} onChange={e => setDescription(e.target.value)} rows={5} />
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="outline"
+                                        className="absolute bottom-2 right-2"
+                                        onClick={handleGenerateDescription}
+                                        disabled={isGenerating}
+                                    >
+                                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
+                                        Generate
+                                    </Button>
+                                </div>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="unique-qualities">Unique Qualities</Label>
+                                <Input id="unique-qualities" placeholder="e.g., Sweet and juicy, perfect for salads, hand-picked" value={uniqueQualities} onChange={(e) => setUniqueQualities(e.target.value)} />
+                                <p className="text-xs text-muted-foreground">Used by AI to generate description. Separate qualities with commas.</p>
                             </div>
                         </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="unique-qualities">Unique Qualities</Label>
-                            <Input id="unique-qualities" placeholder="e.g., Sweet and juicy, perfect for salads, hand-picked" value={uniqueQualities} onChange={(e) => setUniqueQualities(e.target.value)} />
-                            <p className="text-xs text-muted-foreground">Used by AI to generate description. Separate qualities with commas.</p>
+                        <div className="space-y-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="product-image">Product Image</Label>
+                                {imagePreview && (
+                                    <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border">
+                                        <Image src={imagePreview} alt="Product image preview" fill className="object-cover" />
+                                    </div>
+                                )}
+                                <Input id="product-image" type="file" onChange={handleImageChange} accept="image/*" />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="price">Price</Label>
+                                <Input id="price" type="number" placeholder="2.99" step="0.01" required />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="unit">Unit</Label>
+                                <Select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a unit" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="lb">Per Pound (lb)</SelectItem>
+                                        <SelectItem value="bunch">Per Bunch</SelectItem>
+                                        <SelectItem value="head">Per Head</SelectItem>
+                                        <SelectItem value="pint">Per Pint</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="stock">Stock Quantity</Label>
+                                <Input id="stock" type="number" placeholder="100" required/>
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="origin">Origin</Label>
+                                <Input id="origin" placeholder="e.g., Sunny Valley Farm, CA" value={origin} onChange={(e) => setOrigin(e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="category">Category</Label>
+                                <Select>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a category" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="fruits">Fruits</SelectItem>
+                                        <SelectItem value="vegetables">Vegetables</SelectItem>
+                                        <SelectItem value="dairy">Dairy</SelectItem>
+                                        <SelectItem value="other">Other</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
                     </div>
-                    <div className="space-y-6">
-                        <div className="grid gap-2">
-                            <Label htmlFor="product-image">Product Image</Label>
-                            {imagePreview && (
-                                <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border">
-                                    <Image src={imagePreview} alt="Product image preview" fill className="object-cover" />
-                                </div>
-                            )}
-                            <Input id="product-image" type="file" onChange={handleImageChange} accept="image/*" />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="price">Price</Label>
-                            <Input id="price" type="number" placeholder="2.99" />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="unit">Unit</Label>
-                             <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a unit" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="lb">Per Pound (lb)</SelectItem>
-                                    <SelectItem value="bunch">Per Bunch</SelectItem>
-                                    <SelectItem value="head">Per Head</SelectItem>
-                                    <SelectItem value="pint">Per Pint</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="stock">Stock Quantity</Label>
-                            <Input id="stock" type="number" placeholder="100" />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="origin">Origin</Label>
-                            <Input id="origin" placeholder="e.g., Sunny Valley Farm, CA" value={origin} onChange={(e) => setOrigin(e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="category">Category</Label>
-                             <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a category" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="fruits">Fruits</SelectItem>
-                                    <SelectItem value="vegetables">Vegetables</SelectItem>
-                                    <SelectItem value="dairy">Dairy</SelectItem>
-                                    <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
+                    <div className="mt-8 flex justify-end">
+                        <Button type="submit">Save Product</Button>
                     </div>
-                </div>
-                 <div className="mt-8 flex justify-end">
-                    <Button>Save Product</Button>
-                </div>
+                </form>
             </CardContent>
         </Card>
     );
