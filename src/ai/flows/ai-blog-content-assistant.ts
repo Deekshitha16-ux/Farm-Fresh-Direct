@@ -77,9 +77,7 @@ Regional Events:
 
 {{#if topicPreference}}
 The farmer has a topic preference: {{{topicPreference}}}. Prioritize this when generating content.
-{{/if}}
-
-Your response MUST be a valid JSON object that conforms to the output schema. Do not include any other text or explanations before or after the JSON object.`,
+{{/if}}`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
