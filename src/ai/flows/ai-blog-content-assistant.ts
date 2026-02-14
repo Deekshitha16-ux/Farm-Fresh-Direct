@@ -50,8 +50,11 @@ export type AiBlogContentAssistantOutput = z.infer<typeof AiBlogContentAssistant
 const blogAssistantPrompt = ai.definePrompt({
   name: 'blogAssistantPrompt',
   input: {schema: AiBlogContentAssistantInputSchema},
-  output: {schema: AiBlogContentAssistantOutputSchema},
-  prompt: `You are an AI-powered blog assistant for a farmer. Your goal is to help the farmer create engaging marketing content to attract more customers.\n\nBased on the farm's produce, target customer segments, and regional events, you need to:\n1.  Suggest 3-5 relevant and attractive blog post ideas.\n2.  Generate a draft blog post for one of these ideas (or a general relevant topic).\n\nFarm Produce:\n{{#each farmProduce}}\n- {{{this}}}\n{{/each}}\n\nTarget Customer Segments:\n{{#each customerSegments}}\n- {{{this}}}\n{{/each}}\n\nRegional Events:\n{{#each regionalEvents}}\n- {{{this}}}\n{{/each}}\n\n{{#if topicPreference}}\nThe farmer has expressed a preference for content related to: {{{topicPreference}}}. Please consider this preference when generating ideas and the draft post.\n{{/if}}\n\nPlease format your response as a JSON object matching the following schema:\n\n\`\`\`json\n{{jsonSchema AiBlogContentAssistantOutputSchema}}\n\`\`\`\n`,
+  output: {
+    schema: AiBlogContentAssistantOutputSchema,
+    format: 'json',
+  },
+  prompt: `You are an AI-powered blog assistant for a farmer. Your goal is to help the farmer create engaging marketing content to attract more customers.\n\nBased on the farm's produce, target customer segments, and regional events, you need to:\n1.  Suggest 3-5 relevant and attractive blog post ideas.\n2.  Generate a draft blog post for one of these ideas (or a general relevant topic).\n\nFarm Produce:\n{{#each farmProduce}}\n- {{{this}}}\n{{/each}}\n\nTarget Customer Segments:\n{{#each customerSegments}}\n- {{{this}}}\n{{/each}}\n\nRegional Events:\n{{#each regionalEvents}}\n- {{{this}}}\n{{/each}}\n\n{{#if topicPreference}}\nThe farmer has expressed a preference for content related to: {{{topicPreference}}}. Please consider this preference when generating ideas and the draft post.\n{{/if}}\n\nYou must respond with a JSON object.`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
