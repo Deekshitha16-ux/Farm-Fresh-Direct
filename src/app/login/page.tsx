@@ -7,12 +7,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
+import { useAuth } from "@/hooks/use-auth";
+import { DUMMY_USERS } from "@/lib/dummy-data";
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
+    // For this prototype, we'll just log in the dummy farmer user.
+    const farmerUser = DUMMY_USERS.find(u => u.role === 'farmer');
+    if (farmerUser) {
+        login(farmerUser);
+    }
     router.push('/dashboard');
   }
 

@@ -8,12 +8,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useAuth } from "@/hooks/use-auth";
+import { DUMMY_USERS } from "@/lib/dummy-data";
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+     // For prototype, log in as dummy customer user.
+    const customerUser = DUMMY_USERS.find(u => u.role === 'customer');
+    if (customerUser) {
+        login(customerUser);
+    }
     router.push('/dashboard');
   };
 

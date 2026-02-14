@@ -3,10 +3,64 @@
 
 import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
-import { ProductsContext, useProducts } from "@/hooks/use-products";
-import type { Product, CartItem } from '@/lib/types';
-import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
+import { ProductsContext } from "@/hooks/use-products";
+import type { Product, CartItem, User } from '@/lib/types';
+import { DUMMY_PRODUCTS, DUMMY_USERS } from "@/lib/dummy-data";
 import type { ProductsAction } from "@/hooks/use-products";
+import { AuthContext, authReducer } from "@/hooks/use-auth";
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(authReducer, { user: null });
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    try {
+      const storedUser = sessionStorage.getItem('user');
+      if (storedUser) {
+        dispatch({ type: "LOGIN", payload: JSON.parse(storedUser) });
+      }
+    } catch (error) {
+      console.error("Failed to parse user from sessionStorage", error);
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      try {
+        if (state.user) {
+          sessionStorage.setItem('user', JSON.stringify(state.user));
+        } else {
+          sessionStorage.removeItem('user');
+        }
+      } catch (error) {
+        console.error("Failed to save user to sessionStorage", error);
+      }
+    }
+  }, [state, hydrated]);
+
+  const login = (user: User) => {
+    dispatch({ type: 'LOGIN', payload: user });
+  };
+
+  const logout = () => {
+    dispatch({ type: 'LOGOUT' });
+  };
+  
+  if (!hydrated) {
+    return (
+        <AuthContext.Provider value={{ state: { user: null }, login, logout, user: null }}>
+            {children}
+        </AuthContext.Provider>
+    )
+  }
+
+  return (
+    <AuthContext.Provider value={{ state, login, logout, user: state.user }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { cart: [] });
@@ -166,10 +220,12 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
-    <CartProvider>
-      <ProductsProvider>
-        {children}
-      </ProductsProvider>
-    </CartProvider>
+    <AuthProvider>
+        <CartProvider>
+            <ProductsProvider>
+                {children}
+            </ProductsProvider>
+        </CartProvider>
+    </AuthProvider>
   );
 }
