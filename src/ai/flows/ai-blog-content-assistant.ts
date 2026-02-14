@@ -53,31 +53,16 @@ const blogAssistantPrompt = ai.definePrompt({
   output: {
     schema: AiBlogContentAssistantOutputSchema,
   },
-  prompt: `You are an AI-powered blog assistant for a farmer.
-Your task is to generate blog content ideas and a draft post based on the provided information.
+  system: `You are an expert blog assistant for farmers. Your ONLY output MUST be a valid JSON object that adheres to the provided output schema. Do not include any other text, markdown, or commentary before or after the JSON object.`,
+  prompt: `Based on the following farm details, generate a list of 3-5 blog post ideas and a full draft for one of them.
 
-Suggest three to five engaging blog post ideas.
-Then, choose one of those ideas (or the farmer's preferred topic if provided) and write a complete, well-structured draft blog post of at least 3 paragraphs.
+- Farm Produce: {{#if farmProduce}} {{#each farmProduce}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
+- Target Customers: {{#if customerSegments}} {{#each customerSegments}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
+- Regional Events: {{#if regionalEvents}} {{#each regionalEvents}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
+{{#if topicPreference}}- Topic Preference: {{{topicPreference}}}{{/if}}
 
-The provided information is:
--   **Farm Produce:**
-    {{#each farmProduce}}
-    -   {{{this}}}
-    {{/each}}
-
--   **Target Customer Segments:**
-    {{#each customerSegments}}
-    -   {{{this}}}
-    {{/each}}
-
--   **Regional Events:**
-    {{#each regionalEvents}}
-    -   {{{this}}}
-    {{/each}}
-
-{{#if topicPreference}}
--   **Farmer's Topic Preference:** {{{topicPreference}}}. You should prioritize this topic for the draft blog post.
-{{/if}}`,
+First, generate 3-5 engaging blog post ideas and place them in the 'suggestedIdeas' array.
+Second, choose one of those ideas (or the farmer's preferred topic) and write a complete, well-structured draft blog post of at least 3 paragraphs. Place this draft in the 'draftBlogPost' string.`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
