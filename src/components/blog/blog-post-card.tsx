@@ -10,20 +10,26 @@ interface BlogPostCardProps {
 }
 
 export function BlogPostCard({ post }: BlogPostCardProps) {
-  const postImage = PlaceHolderImages.find((p) => p.id === post.imageId);
+  let imageUrl = post.imageUrl;
+  let imageHint;
+  if (!imageUrl) {
+      const postImage = PlaceHolderImages.find((p) => p.id === post.imageId);
+      imageUrl = postImage?.imageUrl;
+      imageHint = postImage?.imageHint;
+  }
 
   return (
     <Card className="flex h-full flex-col overflow-hidden transition-shadow duration-300 hover:shadow-lg">
       <CardHeader className="p-0">
         <Link href={`/blog/${post.slug}`} className="block">
           <div className="relative aspect-video w-full">
-            {postImage && (
+            {imageUrl && (
               <Image
-                src={postImage.imageUrl}
+                src={imageUrl}
                 alt={post.title}
                 fill
                 className="object-cover"
-                data-ai-hint={postImage.imageHint}
+                data-ai-hint={imageHint}
               />
             )}
           </div>

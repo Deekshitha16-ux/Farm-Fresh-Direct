@@ -17,7 +17,13 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
         notFound();
     }
 
-    const postImage = PlaceHolderImages.find(p => p.id === post.imageId);
+    let imageUrl = post.imageUrl;
+    let imageHint;
+    if (!imageUrl) {
+        const postImage = PlaceHolderImages.find(p => p.id === post.imageId);
+        imageUrl = postImage?.imageUrl;
+        imageHint = postImage?.imageHint;
+    }
 
     return (
         <div className="flex min-h-screen flex-col">
@@ -25,14 +31,14 @@ export default function BlogPostPage({ params }: { params: { slug: string } }) {
             <main className="flex-1 py-12 md:py-16">
                 <div className="container">
                     <article className="prose prose-lg mx-auto max-w-4xl">
-                         {postImage && (
+                         {imageUrl && (
                             <div className="relative mb-8 aspect-video w-full">
                                 <Image
-                                    src={postImage.imageUrl}
+                                    src={imageUrl}
                                     alt={post.title}
                                     fill
                                     className="rounded-lg object-cover"
-                                    data-ai-hint={postImage.imageHint}
+                                    data-ai-hint={imageHint}
                                 />
                             </div>
                         )}

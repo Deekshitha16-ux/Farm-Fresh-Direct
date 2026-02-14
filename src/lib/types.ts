@@ -32,6 +32,7 @@ export type BlogPost = {
   date: string;
   imageId: string;
   content: string;
+  imageUrl?: string;
 };
 
 export type User = {

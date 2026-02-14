@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { BlogPostCard } from "@/components/blog/blog-post-card";
@@ -36,6 +37,20 @@ export default function BlogPage() {
     const [title, setTitle] = useState('');
     const [excerpt, setExcerpt] = useState('');
     const [content, setContent] = useState('');
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setImagePreview(null);
+        }
+    };
 
     const handleSavePost = (e: React.FormEvent) => {
         e.preventDefault();
@@ -48,16 +63,14 @@ export default function BlogPage() {
             return;
         }
 
-        const blogImageIds = ['blog-gardening', 'blog-recipes', 'farmer-market'];
-        const randomImageId = blogImageIds[Math.floor(Math.random() * blogImageIds.length)];
-
         const newPost: Omit<BlogPost, 'id' | 'date'> = {
             title,
             excerpt,
             content,
             slug: slugify(title),
             author: user.name,
-            imageId: randomImageId,
+            imageId: imagePreview ? '' : 'new-product-placeholder',
+            imageUrl: imagePreview || undefined,
         };
 
         addPost(newPost);
@@ -70,6 +83,7 @@ export default function BlogPage() {
         setTitle('');
         setExcerpt('');
         setContent('');
+        setImagePreview(null);
     };
 
     return (
@@ -104,6 +118,15 @@ export default function BlogPage() {
                                     <div className="grid gap-2">
                                         <Label htmlFor="post-content">Your Story</Label>
                                         <Textarea id="post-content" value={content} onChange={e => setContent(e.target.value)} placeholder="Tell us about your experience. You can use HTML for formatting." rows={10} required/>
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="post-image">Image</Label>
+                                        {imagePreview && (
+                                            <div className="relative aspect-video w-full max-w-sm overflow-hidden rounded-lg border">
+                                                <Image src={imagePreview} alt="Post image preview" fill className="object-cover" />
+                                            </div>
+                                        )}
+                                        <Input id="post-image" type="file" onChange={handleImageChange} accept="image/*" />
                                     </div>
                                     <Button type="submit">Share My Experience</Button>
                                 </form>
