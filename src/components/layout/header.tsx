@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,6 +17,7 @@ import { Logo } from "@/components/logo";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home" },
@@ -52,17 +53,21 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          <Button asChild variant="ghost" size="icon">
-            <Link href="/cart">
-              <ShoppingCart className="h-5 w-5" />
-              {itemCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  {itemCount}
-                </span>
-              )}
-              <span className="sr-only">Shopping Cart</span>
-            </Link>
-          </Button>
+          <Link
+            href="/cart"
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon" }),
+              "relative"
+            )}
+          >
+            <ShoppingCart className="h-5 w-5" />
+            {itemCount > 0 && (
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                {itemCount}
+              </span>
+            )}
+            <span className="sr-only">Shopping Cart</span>
+          </Link>
 
           {user ? (
             <DropdownMenu>
