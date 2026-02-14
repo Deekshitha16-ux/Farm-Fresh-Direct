@@ -1,4 +1,3 @@
-
 'use server';
 /**
  * @fileOverview An AI-powered blog assistant for farmers.
@@ -48,34 +47,34 @@ const AiBlogContentAssistantOutputSchema = z.object({
 });
 export type AiBlogContentAssistantOutput = z.infer<typeof AiBlogContentAssistantOutputSchema>;
 
-const blogAssistantPrompt = ai.definePrompt({
-  name: 'blogAssistantPrompt',
-  input: {schema: AiBlogContentAssistantInputSchema},
-  output: {
-    schema: AiBlogContentAssistantOutputSchema,
-  },
-  prompt: `You are an expert blog assistant for farmers. Your task is to generate blog content based on the provided farm details. You MUST output a valid JSON object that strictly follows the provided output schema.
-
-Farm Details:
-- Farm Produce: {{#if farmProduce}} {{#each farmProduce}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
-- Target Customers: {{#if customerSegments}} {{#each customerSegments}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
-- Regional Events: {{#if regionalEvents}} {{#each regionalEvents}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
-{{#if topicPreference}}- Topic Preference: {{{topicPreference}}}{{/if}}
-
-Your Tasks:
-1.  Generate an array of 3 to 5 engaging blog post titles and store it in the 'suggestedIdeas' field.
-2.  Select the most compelling idea (or use the topic preference) and write a complete, well-structured draft blog post of at least three paragraphs. Store this draft in the 'draftBlogPost' field.`,
-});
-
 const aiBlogContentAssistantFlow = ai.defineFlow(
   {
     name: 'aiBlogContentAssistantFlow',
     inputSchema: AiBlogContentAssistantInputSchema,
     outputSchema: AiBlogContentAssistantOutputSchema,
   },
-  async input => {
-    const {output} = await blogAssistantPrompt(input);
-    return output!;
+  async (input) => {
+    const { output } = await ai.generate({
+      prompt: `You are an expert blog assistant for farmers. Your task is to generate blog content based on the provided farm details. You MUST output a valid JSON object that strictly follows the provided output schema.
+
+Farm Details:
+- Farm Produce: ${input.farmProduce?.join(', ') || 'Not provided'}
+- Target Customers: ${input.customerSegments?.join(', ') || 'Not provided'}
+- Regional Events: ${input.regionalEvents?.join(', ') || 'Not provided'}
+${input.topicPreference ? `- Topic Preference: ${input.topicPreference}` : ''}
+
+Your Tasks:
+1.  Generate an array of 3 to 5 engaging blog post titles and store it in the 'suggestedIdeas' field.
+2.  Select the most compelling idea (or use the topic preference) and write a complete, well-structured draft blog post of at least three paragraphs. Store this draft in the 'draftBlogPost' field.`,
+      output: {
+        schema: AiBlogContentAssistantOutputSchema,
+      },
+    });
+
+    if (!output) {
+        throw new Error("AI failed to generate a valid response.");
+    }
+    return output;
   }
 );
 

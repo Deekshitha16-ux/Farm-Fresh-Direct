@@ -30,33 +30,36 @@ const ProduceDescriptionOutputSchema = z.object({
 });
 export type ProduceDescriptionOutput = z.infer<typeof ProduceDescriptionOutputSchema>;
 
-export async function aiProduceDescriptionGenerator(
-  input: ProduceDescriptionInput
-): Promise<ProduceDescriptionOutput> {
-  return produceDescriptionGeneratorFlow(input);
-}
-
-const produceDescriptionPrompt = ai.definePrompt({
-  name: 'produceDescriptionPrompt',
-  input: {schema: ProduceDescriptionInputSchema},
-  output: {schema: ProduceDescriptionOutputSchema},
-  prompt: `You are a marketing expert specializing in fresh produce. Your task is to write an appealing and informative product description for the following produce. Highlight its key features and unique qualities to entice customers.
-
-Produce Type: {{{produceType}}}
-Origin: {{{origin}}}
-Unique Qualities: {{{uniqueQualities}}}
-
-Write a compelling product description:`,
-});
-
 const produceDescriptionGeneratorFlow = ai.defineFlow(
   {
     name: 'produceDescriptionGeneratorFlow',
     inputSchema: ProduceDescriptionInputSchema,
     outputSchema: ProduceDescriptionOutputSchema,
   },
-  async input => {
-    const {output} = await produceDescriptionPrompt(input);
-    return output!;
+  async (input) => {
+    const { output } = await ai.generate({
+        prompt: `You are a marketing expert specializing in fresh produce. Your task is to write an appealing and informative product description for the following produce. Highlight its key features and unique qualities to entice customers.
+
+Produce Type: ${input.produceType}
+Origin: ${input.origin}
+Unique Qualities: ${input.uniqueQualities}
+
+Write a compelling product description:`,
+        output: {
+            schema: ProduceDescriptionOutputSchema,
+        },
+    });
+    
+    if (!output) {
+        throw new Error("AI failed to generate a valid description.");
+    }
+    return output;
   }
 );
+
+
+export async function aiProduceDescriptionGenerator(
+  input: ProduceDescriptionInput
+): Promise<ProduceDescriptionOutput> {
+  return produceDescriptionGeneratorFlow(input);
+}
