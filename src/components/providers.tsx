@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useReducer, ReactNode, useEffect, useState } from "react";
@@ -52,9 +53,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const totalPrice = state.cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
+  
+  const cartForValue = hydrated ? state.cart : [];
+  const totalPriceForValue = hydrated ? totalPrice : 0;
+  const stateForValue = hydrated ? state : { cart: [] };
+
 
   return (
-    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, cart: state.cart, totalPrice }}>
+    <CartContext.Provider value={{ state: stateForValue, addToCart, updateQuantity, removeFromCart, cart: cartForValue, totalPrice: totalPriceForValue }}>
       {children}
     </CartContext.Provider>
   );
