@@ -46,11 +46,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = () => {
     dispatch({ type: 'LOGOUT' });
   };
+
+  const updateUser = (userData: Partial<User>) => {
+    dispatch({ type: 'UPDATE_USER', payload: userData });
+  };
   
   const user = isClient ? state.user : null;
 
   return (
-    <AuthContext.Provider value={{ state, login, logout, user }}>
+    <AuthContext.Provider value={{ state, login, logout, updateUser, user }}>
       {children}
     </AuthContext.Provider>
   );
