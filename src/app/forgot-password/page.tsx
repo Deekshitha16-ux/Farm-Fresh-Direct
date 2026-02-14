@@ -1,20 +1,29 @@
+
 'use client';
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Logo } from "@/components/logo";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
+  const { toast } = useToast();
+  const [email, setEmail] = useState('');
 
   const handleReset = (e: React.FormEvent) => {
     e.preventDefault();
-    // Here you would typically handle the password reset logic
-    // For this prototype, we'll just redirect to the login page
+    // In a real app, this would trigger a password reset email.
+    // For this prototype, we'll show a toast notification.
+    toast({
+        title: "Password Reset Link Sent",
+        description: `If an account with ${email} exists, you will receive a password reset link shortly.`,
+    });
     router.push('/login');
   }
 
@@ -35,6 +44,8 @@ export default function ForgotPasswordPage() {
                 type="email"
                 placeholder="m@example.com"
                 required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
             <Button type="submit" className="w-full">
