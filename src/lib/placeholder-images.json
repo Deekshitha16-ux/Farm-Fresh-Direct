@@ -1,3 +1,64 @@
 {
-  "placeholderImages": []
+  "placeholderImages": [
+    {
+      "id": "hero-farm",
+      "description": "A beautiful farm landscape at sunrise.",
+      "imageUrl": "https://images.unsplash.com/photo-1451440063999-77a8b2960d2b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxmYXJtJTIwbGFuZHNjYXBlfGVufDB8fHx8MTc3MTA0ODAzNXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "farm landscape"
+    },
+    {
+      "id": "apples",
+      "description": "A basket of fresh red apples.",
+      "imageUrl": "https://images.unsplash.com/photo-1633795013969-bd8844171ccb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxmcmVzaCUyMGFwcGxlc3xlbnwwfHx8fDE3NzA5MzU3MDR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh apples"
+    },
+    {
+      "id": "carrots",
+      "description": "A bunch of organic carrots with green tops.",
+      "imageUrl": "https://images.unsplash.com/photo-1723476992266-2c4a787c7b32?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxvcmdhbmljJTIwY2Fycm90c3xlbnwwfHx8fDE3NzA5NzIwMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "organic carrots"
+    },
+    {
+      "id": "tomatoes",
+      "description": "Vine-ripened red tomatoes.",
+      "imageUrl": "https://images.unsplash.com/photo-1646082273074-42a50358c053?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxyaXBlJTIwdG9tYXRvZXN8ZW58MHx8fHwxNzcxMDYxNTY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ripe tomatoes"
+    },
+    {
+      "id": "lettuce",
+      "description": "A head of fresh green lettuce.",
+      "imageUrl": "https://images.unsplash.com/photo-1713082063917-59863809f007?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxncmVlbiUyMGxldHR1Y2V8ZW58MHx8fHwxNzcwOTcyMDIxfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "green lettuce"
+    },
+    {
+      "id": "farmer-market",
+      "description": "A bustling farmer's market stall.",
+      "imageUrl": "https://images.unsplash.com/photo-1631394058711-f2880234225b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmYXJtZXIlMjBtYXJrZXR8ZW58MHx8fHwxNzcxMDYxNTY1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "farmer market"
+    },
+    {
+      "id": "blog-gardening",
+      "description": "Hands planting a small seedling in a garden.",
+      "imageUrl": "https://images.unsplash.com/photo-1586876757274-7ba27e45cd6b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxnYXJkZW5pbmclMjBoYW5kc3xlbnwwfHx8fDE3NzEwNjE1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "gardening hands"
+    },
+    {
+      "id": "blog-recipes",
+      "description": "A fresh salad being prepared in a kitchen.",
+      "imageUrl": "https://images.unsplash.com/photo-1631167490917-2a22c070573a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8ZnJlc2glMjBzYWxhZHxlbnwwfHx8fDE3NzEwNjE1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh salad"
+    },
+    {
+      "id": "strawberries",
+      "description": "A punnet of fresh strawberries.",
+      "imageUrl": "https://images.unsplash.com/photo-1589469202779-f35525ef3ac3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmcmVzaCUyMHN0cmF3YmVycmllc3xlbnwwfHx8fDE3NzA5NzIwMjF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "fresh strawberries"
+    },
+    {
+      "id": "potatoes",
+      "description": "A sack of freshly harvested potatoes.",
+      "imageUrl": "https://images.unsplash.com/photo-1655558131320-b7d6d3686e8d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxoYXJ2ZXN0ZWQlMjBwb3RhdG9lc3xlbnwwfHx8fDE3NzEwNjE1NjV8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "harvested potatoes"
+    }
+  ]
 }
