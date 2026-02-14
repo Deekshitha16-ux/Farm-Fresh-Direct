@@ -133,7 +133,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} onChange={e => setOrigin(e.target.value)} required />
+                                <Input id="origin" value={origin} required disabled />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
