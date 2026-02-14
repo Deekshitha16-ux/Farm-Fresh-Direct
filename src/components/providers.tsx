@@ -1,20 +1,39 @@
 "use client";
 
-import { useReducer, ReactNode, useEffect } from "react";
-import { CartContext, cartReducer, getInitialState } from "@/hooks/use-cart";
-import type { Product } from '@/lib/types';
+import { useReducer, ReactNode, useEffect, useState } from "react";
+import { CartContext, cartReducer } from "@/hooks/use-cart";
+import type { Product, CartItem } from '@/lib/types';
 
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(cartReducer, getInitialState());
+  const [state, dispatch] = useReducer(cartReducer, { cart: [] });
+  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     try {
-        localStorage.setItem('cart', JSON.stringify(state));
+      const storedCart = localStorage.getItem('cart');
+      if (storedCart) {
+        const parsedState = JSON.parse(storedCart);
+        if (parsedState.cart) {
+          dispatch({ type: "SET_CART", payload: parsedState.cart });
+        }
+      }
     } catch (error) {
-        console.error("Failed to save cart to localStorage", error);
+      console.error("Failed to parse cart from localStorage", error);
+    } finally {
+      setHydrated(true);
     }
-  }, [state]);
+  }, []);
+
+  useEffect(() => {
+    if (hydrated) {
+      try {
+        localStorage.setItem('cart', JSON.stringify(state));
+      } catch (error) {
+        console.error("Failed to save cart to localStorage", error);
+      }
+    }
+  }, [state, hydrated]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
@@ -39,8 +58,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       {children}
     </CartContext.Provider>
   );
-};
-
+}
 
 export function Providers({ children }: { children: ReactNode }) {
   return <CartProvider>{children}</CartProvider>;

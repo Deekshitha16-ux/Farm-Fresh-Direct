@@ -62,18 +62,6 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
   }
 };
 
-export const getInitialState = (): CartState => {
-  try {
-    if (typeof window !== 'undefined') {
-        const storedCart = localStorage.getItem('cart');
-        return storedCart ? JSON.parse(storedCart) : { cart: [] };
-    }
-  } catch (error) {
-    console.error("Failed to parse cart from localStorage", error);
-  }
-  return { cart: [] };
-};
-
 export const useCart = () => {
   const context = useContext(CartContext);
   if (context === undefined) {
