@@ -1,3 +1,4 @@
+
 "use client";
 
 import { createContext, useContext } from 'react';
@@ -11,13 +12,15 @@ type CartAction =
   | { type: 'ADD_TO_CART'; payload: { product: Product; quantity: number } }
   | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }
   | { type: 'REMOVE_FROM_CART'; payload: { productId: string } }
-  | { type: 'SET_CART'; payload: CartItem[] };
+  | { type: 'SET_CART'; payload: CartItem[] }
+  | { type: 'CLEAR_CART' };
 
 export const CartContext = createContext<{
   state: CartState;
   addToCart: (product: Product, quantity?: number) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
+  clearCart: () => void;
   cart: CartItem[];
   totalPrice: number;
 } | undefined>(undefined);
@@ -57,6 +60,8 @@ export const cartReducer = (state: CartState, action: CartAction): CartState => 
     }
     case 'SET_CART':
       return { ...state, cart: action.payload };
+    case 'CLEAR_CART':
+      return { ...state, cart: [] };
     default:
       return state;
   }

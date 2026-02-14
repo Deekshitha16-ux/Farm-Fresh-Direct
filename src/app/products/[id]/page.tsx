@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { DUMMY_REVIEWS } from '@/lib/dummy-data';
+import { DUMMY_REVIEWS, DUMMY_USERS } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -12,10 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { RatingStars } from '@/components/products/rating-stars';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Store } from 'lucide-react';
 import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/use-products';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [quantity, setQuantity] = useState(1);
@@ -28,6 +29,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   if (!product) {
     notFound();
   }
+
+  const farmer = DUMMY_USERS.find(user => user.role === 'farmer' && user.farmName === product.farmer);
   
   const reviews = DUMMY_REVIEWS.filter(r => r.productId === product.id);
   
@@ -95,6 +98,24 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             </div>
           </div>
           
+          {farmer && (
+            <div className="mt-16 md:mt-24">
+                <h2 className="font-headline text-3xl">About the Farmer</h2>
+                <Separator className="my-6"/>
+                <Card>
+                    <CardHeader className="flex flex-row items-center gap-4">
+                        <Store className="h-8 w-8 text-muted-foreground"/>
+                        <div>
+                            <CardTitle>{farmer.farmName}</CardTitle>
+                        </div>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{farmer.farmDetails}</p>
+                    </CardContent>
+                </Card>
+            </div>
+          )}
+
           <div className="mt-16 md:mt-24">
             <h2 className="font-headline text-3xl">Customer Reviews</h2>
             <Separator className="my-6"/>

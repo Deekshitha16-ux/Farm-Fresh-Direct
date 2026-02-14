@@ -111,7 +111,9 @@ export default function CartItemsClient() {
               <span>Total</span>
               <span>${(totalPrice + 5).toFixed(2)}</span>
             </div>
-            <Button className="w-full" size="lg">Proceed to Checkout</Button>
+            <Button asChild className="w-full" size="lg">
+              <Link href="/checkout">Proceed to Checkout</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

@@ -106,12 +106,16 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = (productId: string) => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: { productId } });
   };
+
+  const clearCart = () => {
+    dispatch({ type: 'CLEAR_CART' });
+  };
   
   const cart = isClient ? state.cart : [];
   const totalPrice = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, cart, totalPrice }}>
+    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, clearCart, cart, totalPrice }}>
       {children}
     </CartContext.Provider>
   );
