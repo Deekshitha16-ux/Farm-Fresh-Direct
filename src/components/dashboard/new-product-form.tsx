@@ -13,11 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 export function NewProductForm() {
     const { toast } = useToast();
     const router = useRouter();
     const { addProduct } = useProducts();
+    const { user } = useAuth();
 
     // Form State
     const [produceType, setProduceType] = useState("");
@@ -26,7 +28,6 @@ export function NewProductForm() {
     const [price, setPrice] = useState("");
     const [unit, setUnit] = useState("");
     const [stock, setStock] = useState("");
-    const [origin, setOrigin] = useState("");
     const [category, setCategory] = useState("");
 
 
@@ -46,13 +47,18 @@ export function NewProductForm() {
     const handleSaveProduct = (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (!user || user.role !== 'farmer' || !user.farmName) {
+            toast({ title: "Error", description: "You must be a farmer to add products.", variant: "destructive" });
+            return;
+        }
+
         const newProduct: Partial<Product> = {
             name: produceType,
             description,
             price: parseFloat(price) || 0,
             unit,
             stock: parseInt(stock, 10) || 0,
-            farmer: origin, // Using origin for farmer name
+            farmer: user.farmName,
             category,
             imageUrl: imagePreview || undefined,
         };
@@ -120,7 +126,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" placeholder="e.g., Sunny Valley Farm, CA" value={origin} onChange={(e) => setOrigin(e.target.value)} />
+                                <Input id="origin" value={user?.farmName || ''} disabled />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>

@@ -24,11 +24,22 @@ import { useProducts } from "@/hooks/use-products";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import type { Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
 
 export function ProductsTable() {
     const { products, removeProduct } = useProducts();
+    const { user } = useAuth();
     const { toast } = useToast();
     const [productToDelete, setProductToDelete] = React.useState<Product | null>(null);
+
+    const farmerProducts = React.useMemo(() => {
+        if (user?.role === 'farmer') {
+            return products.filter(p => p.farmer === user.farmName);
+        }
+        // Return empty array if not a farmer, as this view is for farmers
+        return [];
+    }, [products, user]);
+
 
     const handleDelete = () => {
         if (productToDelete) {
@@ -41,6 +52,19 @@ export function ProductsTable() {
             setProductToDelete(null);
         }
     };
+
+    if (user?.role !== 'farmer') {
+        return (
+            <Card>
+                <CardHeader>
+                    <CardTitle>Products</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <p>This section is for farmers to manage their products.</p>
+                </CardContent>
+            </Card>
+        );
+    }
 
     return (
         <>
@@ -66,7 +90,7 @@ export function ProductsTable() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {products.map(product => {
+                            {farmerProducts.map(product => {
                                 let imageUrl = product.imageUrl;
                                 if (!imageUrl) {
                                     const productImage = PlaceHolderImages.find(p => p.id === product.imageId);

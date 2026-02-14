@@ -40,6 +40,7 @@ export type User = {
     name: string;
     email: string;
     role: 'farmer' | 'customer';
+    farmName?: string;
     farmDetails?: string;
 };
 

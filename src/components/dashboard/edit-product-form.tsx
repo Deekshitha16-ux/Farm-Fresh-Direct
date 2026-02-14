@@ -13,9 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
 
 export function EditProductForm({ productId }: { productId: string }) {
     const { products, updateProduct } = useProducts();
+    const { user } = useAuth();
     const product = products.find(p => p.id === productId);
 
     const { toast } = useToast();
@@ -33,6 +35,13 @@ export function EditProductForm({ productId }: { productId: string }) {
     
     useEffect(() => {
         if (product) {
+            // Security check: only allow farmer to edit their own product
+            if (user?.role !== 'farmer' || user.farmName !== product.farmer) {
+                toast({ title: "Unauthorized", description: "You can only edit your own products.", variant: "destructive" });
+                router.push('/dashboard/products');
+                return;
+            }
+
             setProduceType(product.name);
             setDescription(product.description);
             setPrice(product.price.toString());
@@ -42,10 +51,14 @@ export function EditProductForm({ productId }: { productId: string }) {
             setCategory(product.category);
             setImagePreview(product.imageUrl || null);
         }
-    }, [product]);
+    }, [product, user, router, toast]);
 
     if (!product) {
-       return <p>Product not found.</p>;
+       return <p>Loading product...</p>;
+    }
+    
+    if (user?.role !== 'farmer' || user.farmName !== product.farmer) {
+        return <p>Unauthorized.</p>;
     }
 
 
@@ -71,7 +84,6 @@ export function EditProductForm({ productId }: { productId: string }) {
             price: parseFloat(price) || 0,
             unit,
             stock: parseInt(stock, 10) || 0,
-            farmer: origin,
             category,
             imageUrl: imagePreview || undefined,
         };
@@ -139,7 +151,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" placeholder="e.g., Sunny Valley Farm, CA" value={origin} onChange={(e) => setOrigin(e.target.value)} />
+                                <Input id="origin" value={origin} disabled />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>

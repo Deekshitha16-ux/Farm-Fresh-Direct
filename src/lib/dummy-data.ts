@@ -140,12 +140,35 @@ export const DUMMY_USERS: User[] = [
     name: 'John Doe',
     email: 'farmer@example.com',
     role: 'farmer',
+    farmName: 'Green Valley Farms',
     farmDetails: 'A family-owned farm specializing in organic fruits and vegetables for over 30 years.'
+  },
+  {
+    id: 'u3',
+    name: 'Jane Smith',
+    email: 'farmer2@example.com',
+    role: 'farmer',
+    farmName: 'Sunrise Organics',
+    farmDetails: 'We are passionate about sustainable agriculture and bringing you the freshest produce.'
+  },
+  {
+    id: 'u5',
+    name: 'Samuel Jones',
+    email: 'farmer3@example.com',
+    role: 'farmer',
+    farmName: 'Oakwood Gardens',
+    farmDetails: 'Small batch, high quality, naturally grown vegetables.'
   },
   {
     id: 'u2',
     name: 'Alice',
     email: 'customer@example.com',
+    role: 'customer'
+  },
+  {
+    id: 'u4',
+    name: 'Bob',
+    email: 'customer2@example.com',
     role: 'customer'
   }
 ];
@@ -153,13 +176,35 @@ export const DUMMY_USERS: User[] = [
 export const DUMMY_ORDERS: Order[] = [
   {
     id: 'ord1',
-    userId: 'u2',
+    userId: 'u2', // Alice
     date: '2024-06-20',
-    total: 23.44,
+    total: 20.95,
     status: 'Delivered',
     items: [
-        { product: DUMMY_PRODUCTS[0], quantity: 2 },
-        { product: DUMMY_PRODUCTS[2], quantity: 3 }
+        { product: DUMMY_PRODUCTS[0], quantity: 2 }, // Apples from Green Valley Farms
+        { product: DUMMY_PRODUCTS[1], quantity: 1 }, // Carrots from Sunrise Organics
+        { product: DUMMY_PRODUCTS[2], quantity: 1 }  // Tomatoes from Green Valley Farms
+    ]
+  },
+  {
+    id: 'ord2',
+    userId: 'u4', // Bob
+    date: '2024-06-22',
+    total: 13.96,
+    status: 'Shipped',
+    items: [
+        { product: DUMMY_PRODUCTS[3], quantity: 2 }, // Lettuce from Oakwood Gardens
+        { product: DUMMY_PRODUCTS[5], quantity: 10 } // Potatoes from Oakwood Gardens
+    ]
+  },
+  {
+    id: 'ord3',
+    userId: 'u2', // Alice
+    date: '2024-06-23',
+    total: 5.99,
+    status: 'Pending',
+    items: [
+        { product: DUMMY_PRODUCTS[4], quantity: 1 } // Strawberries from Sunrise Organics
     ]
   }
 ];
