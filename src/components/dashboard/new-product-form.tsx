@@ -37,7 +37,7 @@ export function NewProductForm() {
         if (user?.farmName) {
             setOrigin(user.farmName);
         }
-    }, [user]);
+    }, [user?.farmName]);
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -151,7 +151,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} required disabled />
+                                <Input id="origin" value={origin} onChange={(e) => setOrigin(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>

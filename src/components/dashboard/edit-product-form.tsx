@@ -33,6 +33,7 @@ export function EditProductForm({ productId }: { productId: string }) {
     const [unit, setUnit] = useState("");
     const [stock, setStock] = useState("");
     const [category, setCategory] = useState("");
+    const [farmer, setFarmer] = useState("");
     const [isSaving, setIsSaving] = useState(false);
     
     useEffect(() => {
@@ -50,6 +51,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             setUnit(product.unit);
             setStock(product.stock.toString());
             setCategory(product.category);
+            setFarmer(product.farmer);
             setImagePreview(product.imageUrl || null);
         }
     }, [product, user, router, toast]);
@@ -90,6 +92,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             unit,
             stock: parseInt(stock, 10) || 0,
             category,
+            farmer,
             imageUrl: imagePreview || undefined,
             updatedAt: new Date().toISOString(),
         };
@@ -157,7 +160,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={product.farmer} required disabled />
+                                <Input id="origin" value={farmer} onChange={(e) => setFarmer(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
