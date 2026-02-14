@@ -3,7 +3,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/hooks/use-cart';
-import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -15,7 +15,7 @@ import { Separator } from '@/components/ui/separator';
 
 export default function CheckoutPage() {
     const { cart, totalPrice, clearCart } = useCart();
-    const { user } = useAuth();
+    const { user } = useUserProfile();
     const { toast } = useToast();
     const router = useRouter();
 
@@ -65,11 +65,11 @@ export default function CheckoutPage() {
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="first-name">First Name</Label>
-                                                <Input id="first-name" defaultValue={user?.name.split(' ')[0]} required/>
+                                                <Input id="first-name" defaultValue={user?.displayName?.split(' ')[0]} required/>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="last-name">Last Name</Label>
-                                                <Input id="last-name" defaultValue={user?.name.split(' ').slice(1).join(' ')} required/>
+                                                <Input id="last-name" defaultValue={user?.displayName?.split(' ').slice(1).join(' ')} required/>
                                             </div>
                                         </div>
                                          <div className="space-y-2">

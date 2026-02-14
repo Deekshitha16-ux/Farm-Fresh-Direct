@@ -8,7 +8,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { BlogPostCard } from "@/components/blog/blog-post-card";
 import { useBlog } from "@/hooks/use-blog";
-import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,7 +31,7 @@ function slugify(text: string) {
 
 export default function BlogPage() {
     const { posts, addPost, removePost } = useBlog();
-    const { user } = useAuth();
+    const { user } = useUserProfile();
     const { toast } = useToast();
 
     const [title, setTitle] = useState('');
@@ -68,7 +68,7 @@ export default function BlogPage() {
             excerpt,
             content,
             slug: slugify(title),
-            author: user.name,
+            author: user.displayName,
             imageId: imagePreview ? '' : 'new-product-placeholder',
             imageUrl: imagePreview || undefined,
         };
@@ -76,7 +76,7 @@ export default function BlogPage() {
         addPost(newPost);
         toast({
             title: "Experience Shared!",
-            description: `Thank you for sharing, ${user.name}!`
+            description: `Thank you for sharing, ${user.displayName}!`
         });
         
         // Reset form
@@ -151,7 +151,7 @@ export default function BlogPage() {
                         {posts.map(post => (
                             <div key={post.id} className="relative group">
                                 <BlogPostCard post={post} />
-                                {user && (user.name === post.author || user.role === 'farmer') && (
+                                {user && (user.displayName === post.author || user.role === 'farmer') && (
                                     <Button 
                                         variant="destructive" 
                                         size="icon" 

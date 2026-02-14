@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo } from "react";
@@ -6,17 +7,17 @@ import { DollarSign, Package, Users, Activity } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { DUMMY_ORDERS, DUMMY_PRODUCTS, DUMMY_USERS } from "@/lib/dummy-data";
-import { useAuth } from "@/hooks/use-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
 import type { Order } from "@/lib/types";
 
 function CustomerDashboard() {
-    const { user } = useAuth();
+    const { user } = useUserProfile();
     const myOrders = DUMMY_ORDERS.filter(o => o.userId === user?.id);
 
     return (
         <div>
             <h1 className="font-headline text-4xl">My Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.name}! Here are your recent orders.</p>
+            <p className="text-muted-foreground">Welcome back, {user?.displayName}! Here are your recent orders.</p>
 
             <div className="mt-8">
                 <Card>
@@ -55,7 +56,7 @@ function CustomerDashboard() {
 }
 
 function FarmerDashboard() {
-    const { user } = useAuth();
+    const { user } = useUserProfile();
 
     const stats = useMemo(() => {
         if (!user || user.role !== 'farmer' || !user.farmName) {
@@ -110,7 +111,7 @@ function FarmerDashboard() {
     return (
         <div>
             <h1 className="font-headline text-4xl">{user?.farmName} Dashboard</h1>
-            <p className="text-muted-foreground">Welcome back, {user?.name}. Here's an overview of your farm.</p>
+            <p className="text-muted-foreground">Welcome back, {user?.displayName}. Here's an overview of your farm.</p>
 
             <div className="mt-8 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <Card>
@@ -194,7 +195,16 @@ function FarmerDashboard() {
 }
 
 export default function DashboardPage() {
-    const { user } = useAuth();
+    const { user, isLoading } = useUserProfile();
+
+    if (isLoading) {
+        return (
+             <div>
+                <h1 className="font-headline text-4xl">Dashboard</h1>
+                <p className="text-muted-foreground">Loading...</p>
+            </div>
+        )
+    }
 
     if (!user) {
         return (

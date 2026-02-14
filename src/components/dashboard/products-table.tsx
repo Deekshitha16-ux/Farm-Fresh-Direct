@@ -24,11 +24,11 @@ import { useProducts } from "@/hooks/use-products";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import type { Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/use-auth";
+import { useUserProfile } from "@/hooks/use-user-profile";
 
 export function ProductsTable() {
     const { products, removeProduct } = useProducts();
-    const { user } = useAuth();
+    const { user } = useUserProfile();
     const { toast } = useToast();
     const [productToDelete, setProductToDelete] = React.useState<Product | null>(null);
 

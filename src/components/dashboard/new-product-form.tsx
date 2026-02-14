@@ -13,13 +13,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
-import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 export function NewProductForm() {
     const { toast } = useToast();
     const router = useRouter();
     const { addProduct } = useProducts();
-    const { user } = useAuth();
+    const { user } = useUserProfile();
 
     // Form State
     const [produceType, setProduceType] = useState("");

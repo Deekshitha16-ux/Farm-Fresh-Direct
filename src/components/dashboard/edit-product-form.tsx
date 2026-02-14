@@ -13,11 +13,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
-import { useAuth } from '@/hooks/use-auth';
+import { useUserProfile } from '@/hooks/use-user-profile';
 
 export function EditProductForm({ productId }: { productId: string }) {
     const { products, updateProduct } = useProducts();
-    const { user } = useAuth();
+    const { user } = useUserProfile();
     const product = products.find(p => p.id === productId);
 
     const { toast } = useToast();
