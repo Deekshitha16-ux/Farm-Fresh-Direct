@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,6 +20,20 @@ export function NewProductForm() {
     const [produceType, setProduceType] = useState("");
     const [origin, setOrigin] = useState("");
     const [uniqueQualities, setUniqueQualities] = useState("");
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreview(reader.result as string);
+            };
+            reader.readAsDataURL(file);
+        } else {
+            setImagePreview(null);
+        }
+    };
 
 
     const handleGenerateDescription = async () => {
@@ -92,6 +107,15 @@ export function NewProductForm() {
                         </div>
                     </div>
                     <div className="space-y-6">
+                        <div className="grid gap-2">
+                            <Label htmlFor="product-image">Product Image</Label>
+                            {imagePreview && (
+                                <div className="relative aspect-square w-full max-w-[200px] overflow-hidden rounded-lg border">
+                                    <Image src={imagePreview} alt="Product image preview" fill className="object-cover" />
+                                </div>
+                            )}
+                            <Input id="product-image" type="file" onChange={handleImageChange} accept="image/*" />
+                        </div>
                         <div className="grid gap-2">
                             <Label htmlFor="price">Price</Label>
                             <Input id="price" type="number" placeholder="2.99" />
