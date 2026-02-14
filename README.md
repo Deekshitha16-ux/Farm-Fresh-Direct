@@ -1,5 +1,1 @@
-# Firebase Studio
-
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+Developing a digital marketplace that enables farmers to list fresh produce by category and allows customers to purchase directly. Implemented user authentication (Register/Login), real-time database integration, product management, blog section, and rating system using Firebase to ensure secure and seamless transactions.
