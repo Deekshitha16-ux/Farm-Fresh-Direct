@@ -44,14 +44,18 @@ export default function CartItemsClient() {
               </TableHeader>
               <TableBody>
                 {cart.map(({ product, quantity }) => {
-                  const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+                  let imageUrl = product.imageUrl;
+                  if (!imageUrl) {
+                      const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+                      imageUrl = productImage?.imageUrl;
+                  }
                   return (
                     <TableRow key={product.id}>
                       <TableCell>
                         <div className="relative h-16 w-16 overflow-hidden rounded-md">
-                          {productImage && (
+                          {imageUrl && (
                             <Image
-                              src={productImage.imageUrl}
+                              src={imageUrl}
                               alt={product.name}
                               fill
                               className="object-cover"

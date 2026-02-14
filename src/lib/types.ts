@@ -10,6 +10,7 @@ export type Product = {
   rating: number;
   reviewCount: number;
   imageId: string;
+  imageUrl?: string;
 };
 
 export type Review = {

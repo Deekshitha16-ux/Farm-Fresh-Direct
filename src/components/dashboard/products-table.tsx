@@ -38,15 +38,19 @@ export function ProductsTable() {
                     </TableHeader>
                     <TableBody>
                         {products.map(product => {
-                            const productImage = PlaceHolderImages.find(p => p.id === product.imageId);
+                            let imageUrl = product.imageUrl;
+                            if (!imageUrl) {
+                                const productImage = PlaceHolderImages.find(p => p.id === product.imageId);
+                                imageUrl = productImage?.imageUrl;
+                            }
                             return (
                                 <TableRow key={product.id}>
                                     <TableCell className="hidden sm:table-cell">
-                                        {productImage && <Image
+                                        {imageUrl && <Image
                                             alt={product.name}
                                             className="aspect-square rounded-md object-cover"
                                             height="64"
-                                            src={productImage.imageUrl}
+                                            src={imageUrl}
                                             width="64"
                                         />}
                                     </TableCell>

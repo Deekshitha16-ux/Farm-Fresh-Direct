@@ -124,7 +124,8 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
       category: productData.category || 'Uncategorized',
       rating: 0,
       reviewCount: 0,
-      imageId: 'new-product-placeholder',
+      imageId: productData.imageUrl ? '' : 'new-product-placeholder',
+      imageUrl: productData.imageUrl,
     };
     dispatch({ type: 'ADD_PRODUCT', payload: newProduct });
   };

@@ -30,7 +30,14 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
   }
   
   const reviews = DUMMY_REVIEWS.filter(r => r.productId === product.id);
-  const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+  
+  let imageUrl = product.imageUrl;
+  let imageHint;
+  if (!imageUrl) {
+      const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+      imageUrl = productImage?.imageUrl;
+      imageHint = productImage?.imageHint;
+  }
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
@@ -48,13 +55,13 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           <div className="grid grid-cols-1 gap-12 md:grid-cols-2">
             <div>
               <div className="relative aspect-square w-full overflow-hidden rounded-lg border">
-                {productImage && (
+                {imageUrl && (
                   <Image
-                    src={productImage.imageUrl}
+                    src={imageUrl}
                     alt={product.name}
                     fill
                     className="object-cover"
-                    data-ai-hint={productImage.imageHint}
+                    data-ai-hint={imageHint}
                   />
                 )}
               </div>

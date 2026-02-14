@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -18,7 +19,13 @@ export function ProductCard({ product }: ProductCardProps) {
   const { addToCart } = useCart();
   const { toast } = useToast();
 
-  const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+  let imageUrl = product.imageUrl;
+  let imageHint;
+  if (!imageUrl) {
+      const productImage = PlaceHolderImages.find((p) => p.id === product.imageId);
+      imageUrl = productImage?.imageUrl;
+      imageHint = productImage?.imageHint;
+  }
 
   const handleAddToCart = () => {
     addToCart(product);
@@ -33,13 +40,13 @@ export function ProductCard({ product }: ProductCardProps) {
       <CardHeader className="p-0">
         <Link href={`/products/${product.id}`} className="block">
           <div className="relative aspect-[3/2] w-full">
-            {productImage && (
+            {imageUrl && (
               <Image
-                src={productImage.imageUrl}
+                src={imageUrl}
                 alt={product.name}
                 fill
                 className="object-cover"
-                data-ai-hint={productImage.imageHint}
+                data-ai-hint={imageHint}
               />
             )}
           </div>

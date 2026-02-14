@@ -92,6 +92,7 @@ export function NewProductForm() {
             stock: parseInt(stock, 10) || 0,
             farmer: origin, // Using origin for farmer name
             category,
+            imageUrl: imagePreview || undefined,
         };
 
         addProduct(newProduct);
