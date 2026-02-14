@@ -54,8 +54,8 @@ export function NewProductForm() {
     const handleSaveProduct = (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!user || user.role !== 'farmer' || !user.farmName) {
-            toast({ title: "Error", description: "You must be a farmer to add products.", variant: "destructive" });
+        if (!user || user.role !== 'farmer' || !origin) {
+            toast({ title: "Error", description: "You must be a farmer and specify an origin to add products.", variant: "destructive" });
             return;
         }
 
@@ -65,7 +65,7 @@ export function NewProductForm() {
             price: parseFloat(price) || 0,
             unit,
             stock: parseInt(stock, 10) || 0,
-            farmer: user.farmName,
+            farmer: origin,
             category,
             imageUrl: imagePreview || undefined,
         };
@@ -133,7 +133,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} disabled />
+                                <Input id="origin" value={origin} onChange={e => setOrigin(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>

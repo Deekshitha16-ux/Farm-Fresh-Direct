@@ -85,6 +85,7 @@ export function EditProductForm({ productId }: { productId: string }) {
             unit,
             stock: parseInt(stock, 10) || 0,
             category,
+            farmer: origin,
             imageUrl: imagePreview || undefined,
         };
         
@@ -151,7 +152,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} disabled />
+                                <Input id="origin" value={origin} onChange={e => setOrigin(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
