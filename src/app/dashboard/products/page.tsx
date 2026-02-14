@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import { PlusCircle } from "lucide-react";
 import { ProductsTable } from "@/components/dashboard/products-table";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function DashboardProductsPage() {
     return (
@@ -11,12 +12,10 @@ export default function DashboardProductsPage() {
                     <h1 className="font-headline text-4xl">Your Products</h1>
                     <p className="text-muted-foreground">Manage your inventory and product listings.</p>
                 </div>
-                <Button asChild>
-                    <Link href="/dashboard/products/new">
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Product
-                    </Link>
-                </Button>
+                <Link href="/dashboard/products/new" className={cn(buttonVariants({ variant: "default" }))}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Product
+                </Link>
             </div>
             <div className="mt-8">
                 <ProductsTable />
