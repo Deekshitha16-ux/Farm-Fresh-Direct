@@ -29,6 +29,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [userType, setUserType] = useState<"customer" | "farmer">("customer");
+  const [farmName, setFarmName] = useState("");
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +49,10 @@ export default function RegisterPage() {
         createdAt: new Date().toISOString(),
       };
       
+      if (userType === 'farmer') {
+        userProfile.farmName = farmName;
+      }
+
       const userDocRef = doc(firestore, 'users', user.uid);
       setDocumentNonBlocking(userDocRef, userProfile, {});
 
@@ -108,6 +113,12 @@ export default function RegisterPage() {
                   </div>
                 </RadioGroup>
             </div>
+            {userType === 'farmer' && (
+                <div className="grid gap-2">
+                    <Label htmlFor="farm-name">Farm Name</Label>
+                    <Input id="farm-name" placeholder="e.g. Green Valley Farms" required value={farmName} onChange={e => setFarmName(e.target.value)} disabled={isLoading} />
+                </div>
+            )}
             <div className="grid gap-2">
               <Label htmlFor="full-name">Full Name</Label>
               <Input id="full-name" placeholder="John Doe" required value={fullName} onChange={e => setFullName(e.target.value)} disabled={isLoading}/>

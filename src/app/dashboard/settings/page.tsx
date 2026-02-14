@@ -21,12 +21,14 @@ export default function SettingsPage() {
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [farmName, setFarmName] = useState('');
     const [farmDetails, setFarmDetails] = useState('');
 
     useEffect(() => {
         if (user) {
             setName(user.displayName || '');
             setEmail(user.email || '');
+            setFarmName(user.farmName || '');
             setFarmDetails(user.farmDetails || '');
         }
     }, [user]);
@@ -59,6 +61,7 @@ export default function SettingsPage() {
             displayName: name,
         };
         if (user.role === 'farmer') {
+            dataToUpdate.farmName = farmName;
             dataToUpdate.farmDetails = farmDetails;
         }
 
@@ -96,10 +99,16 @@ export default function SettingsPage() {
                                 <Input id="email" type="email" value={email} disabled />
                             </div>
                             {user.role === 'farmer' && (
-                                <div className="grid gap-2">
-                                    <Label htmlFor="farm-details">Farm Details</Label>
-                                    <Textarea id="farm-details" value={farmDetails} onChange={(e) => setFarmDetails(e.target.value)} />
-                                </div>
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="farm-name">Farm Name</Label>
+                                        <Input id="farm-name" value={farmName} onChange={(e) => setFarmName(e.target.value)} placeholder="Your Farm's Name" />
+                                    </div>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="farm-details">Farm Details</Label>
+                                        <Textarea id="farm-details" value={farmDetails} onChange={(e) => setFarmDetails(e.target.value)} placeholder="Tell customers a little about your farm." />
+                                    </div>
+                                </>
                             )}
                             <Button type="submit">Save Changes</Button>
                         </form>
