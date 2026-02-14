@@ -4,9 +4,11 @@
 import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
 import { ProductsContext } from "@/hooks/use-products";
-import type { Product, CartItem, User } from '@/lib/types';
-import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
+import { BlogContext } from "@/hooks/use-blog";
+import type { Product, CartItem, User, BlogPost } from '@/lib/types';
+import { DUMMY_PRODUCTS, DUMMY_BLOG_POSTS } from "@/lib/dummy-data";
 import type { ProductsAction } from "@/hooks/use-products";
+import type { BlogAction } from "@/hooks/use-blog";
 import { AuthContext, authReducer } from "@/hooks/use-auth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -203,13 +205,85 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
   );
 }
 
+const blogReducer = (state: { posts: BlogPost[] }, action: BlogAction): { posts: BlogPost[] } => {
+  switch (action.type) {
+    case 'ADD_POST':
+      return {
+        ...state,
+        posts: [action.payload, ...state.posts],
+      };
+    case 'REMOVE_POST':
+      return {
+        ...state,
+        posts: state.posts.filter(p => p.id !== action.payload.postId),
+      };
+    case 'SET_POSTS':
+      return { ...state, posts: action.payload };
+    default:
+      return state;
+  }
+};
+
+export function BlogProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(blogReducer, { posts: DUMMY_BLOG_POSTS });
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    try {
+      const storedPosts = localStorage.getItem('posts');
+      if (storedPosts) {
+        const parsedState = JSON.parse(storedPosts);
+        if (parsedState.posts && parsedState.posts.length > 0) {
+          dispatch({ type: "SET_POSTS", payload: parsedState.posts });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to parse posts from localStorage", error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isClient) {
+      try {
+        localStorage.setItem('posts', JSON.stringify(state));
+      } catch (error) {
+        console.error("Failed to save posts to localStorage", error);
+      }
+    }
+  }, [state, isClient]);
+
+  const addPost = (postData: Omit<BlogPost, 'id' | 'date'>) => {
+    const newPost: BlogPost = {
+      ...postData,
+      id: new Date().getTime().toString(),
+      date: new Date().toISOString(),
+    };
+    dispatch({ type: 'ADD_POST', payload: newPost });
+  };
+
+  const removePost = (postId: string) => {
+    dispatch({ type: 'REMOVE_POST', payload: { postId } });
+  };
+
+  const posts = isClient ? state.posts : DUMMY_BLOG_POSTS;
+
+  return (
+    <BlogContext.Provider value={{ state, addPost, removePost, posts }}>
+      {children}
+    </BlogContext.Provider>
+  );
+}
+
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <AuthProvider>
         <CartProvider>
             <ProductsProvider>
-                {children}
+                <BlogProvider>
+                    {children}
+                </BlogProvider>
             </ProductsProvider>
         </CartProvider>
     </AuthProvider>

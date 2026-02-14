@@ -10,14 +10,11 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { generateDescription } from "@/lib/actions";
 import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
 
 export function NewProductForm() {
-    const [isGenerating, setIsGenerating] = useState(false);
     const { toast } = useToast();
     const router = useRouter();
     const { addProduct } = useProducts();
@@ -25,7 +22,6 @@ export function NewProductForm() {
     // Form State
     const [produceType, setProduceType] = useState("");
     const [description, setDescription] = useState("");
-    const [uniqueQualities, setUniqueQualities] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [price, setPrice] = useState("");
     const [unit, setUnit] = useState("");
@@ -44,40 +40,6 @@ export function NewProductForm() {
             reader.readAsDataURL(file);
         } else {
             setImagePreview(null);
-        }
-    };
-
-
-    const handleGenerateDescription = async () => {
-        if (!produceType || !origin || !uniqueQualities) {
-            toast({
-                title: "Missing Information",
-                description: "Please fill in Product Name, Origin, and Unique Qualities to generate a description.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        setIsGenerating(true);
-        try {
-            const result = await generateDescription({ produceType, origin, uniqueQualities });
-            if (result.description) {
-                setDescription(result.description);
-                toast({
-                    title: "Description Generated!",
-                    description: "The AI has generated a new product description.",
-                });
-            } else {
-                 throw new Error("Failed to generate description.");
-            }
-        } catch (error) {
-            toast({
-                title: "Generation Failed",
-                description: "There was an error generating the description. Please try again.",
-                variant: "destructive",
-            });
-        } finally {
-            setIsGenerating(false);
         }
     };
 
@@ -121,25 +83,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="description">Description</Label>
-                                <div className="relative">
-                                    <Textarea id="description" placeholder="A detailed description of your product." value={description} onChange={e => setDescription(e.target.value)} rows={5} />
-                                    <Button
-                                        type="button"
-                                        size="sm"
-                                        variant="outline"
-                                        className="absolute bottom-2 right-2"
-                                        onClick={handleGenerateDescription}
-                                        disabled={isGenerating}
-                                    >
-                                        {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wand2 className="mr-2 h-4 w-4" />}
-                                        Generate
-                                    </Button>
-                                </div>
-                            </div>
-                            <div className="grid gap-2">
-                                <Label htmlFor="unique-qualities">Unique Qualities</Label>
-                                <Input id="unique-qualities" placeholder="e.g., Sweet and juicy, perfect for salads, hand-picked" value={uniqueQualities} onChange={(e) => setUniqueQualities(e.target.value)} />
-                                <p className="text-xs text-muted-foreground">Used by AI to generate description. Separate qualities with commas.</p>
+                                <Textarea id="description" placeholder="A detailed description of your product." value={description} onChange={e => setDescription(e.target.value)} rows={5} />
                             </div>
                         </div>
                         <div className="space-y-6">
