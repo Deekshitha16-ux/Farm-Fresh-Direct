@@ -137,7 +137,7 @@ export const DUMMY_BLOG_POSTS: BlogPost[] = [
 export const DUMMY_USERS: User[] = [
   {
     id: 'u1',
-    name: 'Green Valley Farms',
+    name: 'John Doe',
     email: 'farmer@example.com',
     role: 'farmer',
     farmDetails: 'A family-owned farm specializing in organic fruits and vegetables for over 30 years.'

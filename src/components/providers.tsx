@@ -5,15 +5,16 @@ import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
 import { ProductsContext } from "@/hooks/use-products";
 import type { Product, CartItem, User } from '@/lib/types';
-import { DUMMY_PRODUCTS, DUMMY_USERS } from "@/lib/dummy-data";
+import { DUMMY_PRODUCTS } from "@/lib/dummy-data";
 import type { ProductsAction } from "@/hooks/use-products";
 import { AuthContext, authReducer } from "@/hooks/use-auth";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, { user: null });
-  const [hydrated, setHydrated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     try {
       const storedUser = sessionStorage.getItem('user');
       if (storedUser) {
@@ -22,11 +23,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to parse user from sessionStorage", error);
     }
-    setHydrated(true);
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
+    if (isClient) {
       try {
         if (state.user) {
           sessionStorage.setItem('user', JSON.stringify(state.user));
@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("Failed to save user to sessionStorage", error);
       }
     }
-  }, [state, hydrated]);
+  }, [state.user, isClient]);
 
   const login = (user: User) => {
     dispatch({ type: 'LOGIN', payload: user });
@@ -47,16 +47,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'LOGOUT' });
   };
   
-  if (!hydrated) {
-    return (
-        <AuthContext.Provider value={{ state: { user: null }, login, logout, user: null }}>
-            {children}
-        </AuthContext.Provider>
-    )
-  }
+  const user = isClient ? state.user : null;
 
   return (
-    <AuthContext.Provider value={{ state, login, logout, user: state.user }}>
+    <AuthContext.Provider value={{ state, login, logout, user }}>
       {children}
     </AuthContext.Provider>
   );
@@ -64,10 +58,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(cartReducer, { cart: [] });
-  const [hydrated, setHydrated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
-  // Load cart from localStorage on mount
   useEffect(() => {
+    setIsClient(true);
     try {
       const storedCart = localStorage.getItem('cart');
       if (storedCart) {
@@ -79,19 +73,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error("Failed to parse cart from localStorage", error);
     }
-    setHydrated(true); // Signal that hydration is complete
   }, []);
 
-  // Save cart to localStorage on change
   useEffect(() => {
-    if (hydrated) {
+    if (isClient) {
       try {
         localStorage.setItem('cart', JSON.stringify(state));
       } catch (error) {
         console.error("Failed to save cart to localStorage", error);
       }
     }
-  }, [state, hydrated]);
+  }, [state, isClient]);
 
   const addToCart = (product: Product, quantity: number = 1) => {
     dispatch({ type: 'ADD_TO_CART', payload: { product, quantity } });
@@ -108,20 +100,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const removeFromCart = (productId: string) => {
     dispatch({ type: 'REMOVE_FROM_CART', payload: { productId } });
   };
-
-  const totalPrice = state.cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
   
-  // On initial client render, we return an empty cart to match the server
-  if (!hydrated) {
-    return (
-      <CartContext.Provider value={{ state: { cart: [] }, addToCart, updateQuantity, removeFromCart, cart: [], totalPrice: 0 }}>
-        {children}
-      </CartContext.Provider>
-    )
-  }
+  const cart = isClient ? state.cart : [];
+  const totalPrice = cart.reduce((total, item) => total + item.product.price * item.quantity, 0);
 
   return (
-    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, cart: state.cart, totalPrice }}>
+    <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, cart, totalPrice }}>
       {children}
     </CartContext.Provider>
   );
@@ -153,9 +137,10 @@ const productsReducer = (state: { products: Product[] }, action: ProductsAction)
 
 export function ProductsProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(productsReducer, { products: DUMMY_PRODUCTS });
-  const [hydrated, setHydrated] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     try {
       const storedProducts = localStorage.getItem('products');
       if (storedProducts) {
@@ -166,20 +151,18 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
       }
     } catch (error) {
       console.error("Failed to parse products from localStorage", error);
-    } finally {
-      setHydrated(true);
     }
   }, []);
 
   useEffect(() => {
-    if (hydrated) {
+    if (isClient) {
       try {
         localStorage.setItem('products', JSON.stringify(state));
       } catch (error) {
         console.error("Failed to save products to localStorage", error);
       }
     }
-  }, [state, hydrated]);
+  }, [state, isClient]);
 
   const addProduct = (productData: Partial<Product>) => {
     const newProduct: Product = {
@@ -207,11 +190,10 @@ export function ProductsProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'REMOVE_PRODUCT', payload: { productId } });
   };
 
-  const productsForValue = hydrated ? state.products : DUMMY_PRODUCTS;
-  const stateForValue = hydrated ? state : { products: DUMMY_PRODUCTS };
+  const products = isClient ? state.products : DUMMY_PRODUCTS;
 
   return (
-    <ProductsContext.Provider value={{ state: stateForValue, addProduct, updateProduct, removeProduct, products: productsForValue }}>
+    <ProductsContext.Provider value={{ state, addProduct, updateProduct, removeProduct, products }}>
       {children}
     </ProductsContext.Provider>
   );
