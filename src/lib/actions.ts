@@ -18,13 +18,7 @@ export async function generateDescription(input: ProduceDescriptionInput): Promi
 }
 
 export async function generateBlogContent(input: AiBlogContentAssistantInput): Promise<AiBlogContentAssistantOutput> {
-     // In a real application, you would add input validation here.
-    try {
-        const result = await aiBlogContentAssistant(input);
-        return result;
-    } catch (error) {
-        console.error("Error generating blog content:", error);
-        // You might want to return a more structured error object
-        return { suggestedIdeas: [], draftBlogPost: "" };
-    }
+    // By not catching the error here, it will be propagated to the client,
+    // allowing the UI to display a more specific error message from the AI service.
+    return await aiBlogContentAssistant(input);
 }

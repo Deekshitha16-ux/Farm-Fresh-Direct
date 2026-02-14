@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview An AI-powered blog assistant for farmers.
@@ -53,16 +54,17 @@ const blogAssistantPrompt = ai.definePrompt({
   output: {
     schema: AiBlogContentAssistantOutputSchema,
   },
-  system: `You are an expert blog assistant for farmers. Your ONLY output MUST be a valid JSON object that adheres to the provided output schema. Do not include any other text, markdown, or commentary before or after the JSON object.`,
-  prompt: `Based on the following farm details, generate a list of 3-5 blog post ideas and a full draft for one of them.
+  prompt: `You are an expert blog assistant for farmers. Your task is to generate blog content based on the provided farm details. You MUST output a valid JSON object that strictly follows the provided output schema.
 
+Farm Details:
 - Farm Produce: {{#if farmProduce}} {{#each farmProduce}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
 - Target Customers: {{#if customerSegments}} {{#each customerSegments}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
 - Regional Events: {{#if regionalEvents}} {{#each regionalEvents}} {{{this}}}{{#unless @last}}, {{/unless}}{{/each}} {{else}} Not provided {{/if}}
 {{#if topicPreference}}- Topic Preference: {{{topicPreference}}}{{/if}}
 
-First, generate 3-5 engaging blog post ideas and place them in the 'suggestedIdeas' array.
-Second, choose one of those ideas (or the farmer's preferred topic) and write a complete, well-structured draft blog post of at least 3 paragraphs. Place this draft in the 'draftBlogPost' string.`,
+Your Tasks:
+1.  Generate an array of 3 to 5 engaging blog post titles and store it in the 'suggestedIdeas' field.
+2.  Select the most compelling idea (or use the topic preference) and write a complete, well-structured draft blog post of at least three paragraphs. Store this draft in the 'draftBlogPost' field.`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(

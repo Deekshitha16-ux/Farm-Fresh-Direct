@@ -39,7 +39,7 @@ export default function BlogAssistantClient() {
                 topicPreference,
             });
 
-            if (result.suggestedIdeas.length > 0 || result.draftBlogPost) {
+            if (result && (result.suggestedIdeas.length > 0 || result.draftBlogPost)) {
                 setSuggestedIdeas(result.suggestedIdeas);
                 setDraftBlogPost(result.draftBlogPost);
                 toast({
@@ -47,12 +47,12 @@ export default function BlogAssistantClient() {
                     description: "AI has created new ideas and a draft for you.",
                 });
             } else {
-                throw new Error("AI returned empty content.");
+                throw new Error("AI returned empty or invalid content.");
             }
         } catch (error) {
              toast({
                 title: "Generation Failed",
-                description: "There was an error generating blog content. Please try again.",
+                description: (error as Error).message || "An unexpected error occurred. Please try again.",
                 variant: "destructive",
             });
         } finally {
