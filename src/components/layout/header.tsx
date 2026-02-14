@@ -53,21 +53,17 @@ export function Header() {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-4">
-          <Link
-            href="/cart"
-            className={cn(
-              buttonVariants({ variant: "ghost", size: "icon" }),
-              "relative"
-            )}
-          >
-            <ShoppingCart className="h-5 w-5" />
-            {itemCount > 0 && (
-              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                {itemCount}
-              </span>
-            )}
-            <span className="sr-only">Shopping Cart</span>
-          </Link>
+          <Button asChild variant="ghost" size="icon" className="relative">
+            <Link href="/cart">
+              <ShoppingCart className="h-5 w-5" />
+              {itemCount > 0 && (
+                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {itemCount}
+                </span>
+              )}
+              <span className="sr-only">Shopping Cart</span>
+            </Link>
+          </Button>
 
           {user ? (
             <DropdownMenu>
