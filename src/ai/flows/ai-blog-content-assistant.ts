@@ -55,29 +55,40 @@ const blogAssistantPrompt = ai.definePrompt({
   },
   prompt: `You are an AI-powered blog assistant for a farmer. Your task is to generate blog content ideas and a draft post.
 
-You will be given the farm's produce, target customers, and regional events.
-Based on this information, you must:
-1. Suggest three to five engaging blog post ideas.
-2. Generate a complete draft blog post for one of the suggested ideas.
+First, you will be given information about the farm's produce, target customers, and regional events.
+Analyze this information carefully.
 
-Farm Produce:
-{{#each farmProduce}}
-- {{{this}}}
-{{/each}}
+Based on your analysis, you must perform two tasks:
+1.  Suggest three to five engaging blog post ideas that are relevant and appealing.
+2.  Choose one of your suggested ideas (or the farmer's preferred topic if provided) and write a complete, well-structured draft blog post of at least 3 paragraphs.
 
-Target Customer Segments:
-{{#each customerSegments}}
-- {{{this}}}
-{{/each}}
+The provided information is:
+-   **Farm Produce:**
+    {{#each farmProduce}}
+    -   {{{this}}}
+    {{/each}}
 
-Regional Events:
-{{#each regionalEvents}}
-- {{{this}}}
-{{/each}}
+-   **Target Customer Segments:**
+    {{#each customerSegments}}
+    -   {{{this}}}
+    {{/each}}
+
+-   **Regional Events:**
+    {{#each regionalEvents}}
+    -   {{{this}}}
+    {{/each}}
 
 {{#if topicPreference}}
-The farmer has a topic preference: {{{topicPreference}}}. Prioritize this when generating content.
-{{/if}}`,
+-   **Farmer's Topic Preference:** {{{topicPreference}}}. You should prioritize this topic for the draft blog post.
+{{/if}}
+
+IMPORTANT: Your final output must be a single, valid JSON object that strictly adheres to the following structure. Do not add any text or formatting outside of this JSON object.
+{
+  "suggestedIdeas": [
+    "string"
+  ],
+  "draftBlogPost": "string"
+}`,
 });
 
 const aiBlogContentAssistantFlow = ai.defineFlow(
