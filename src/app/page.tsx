@@ -16,7 +16,7 @@ import { useProducts } from '@/hooks/use-products';
 
 export default function Home() {
   const heroImage = PlaceHolderImages.find(p => p.id === 'hero-farm');
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -81,6 +81,7 @@ export default function Home() {
             <p className="mb-12 mt-2 text-center text-muted-foreground">
               Hand-picked selections from our best farms.
             </p>
+            {isLoading && <p className="text-center">Loading products...</p>}
             <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
               {products.slice(0, 4).map((product) => (
                 <ProductCard key={product.id} product={product} />

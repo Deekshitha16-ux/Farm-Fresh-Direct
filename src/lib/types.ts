@@ -6,7 +6,8 @@ export type Product = {
   price: number;
   unit: string;
   stock: number;
-  farmer: string;
+  farmer: string; // farm name
+  farmerId: string; // farmer's user ID
   category: string;
   rating: number;
   reviewCount: number;
@@ -54,15 +55,22 @@ export type CartItem = {
 }
 
 export type OrderItem = {
-    product: Product;
+    product: Product; // Denormalized product info at time of purchase
     quantity: number;
+    pricePerUnit: number;
+    subtotal: number;
+    productId: string;
+    farmerId: string;
 }
 
 export type Order = {
-    id: string;
-    userId: string;
-    date: string;
-    total: number;
+    id?: string;
+    customerId: string;
+    customerName: string;
+    orderDate: string;
+    totalAmount: number;
     status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
+    shippingAddress: string;
     items: OrderItem[];
+    farmerIds: string[]; // For querying by farmers
 }

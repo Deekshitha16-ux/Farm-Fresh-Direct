@@ -3,11 +3,9 @@
 
 import { useReducer, ReactNode, useEffect, useState } from "react";
 import { CartContext, cartReducer } from "@/hooks/use-cart";
-import { ProductsContext } from "@/hooks/use-products";
 import { BlogContext } from "@/hooks/use-blog";
 import type { Product, CartItem, BlogPost } from '@/lib/types';
-import { DUMMY_PRODUCTS, DUMMY_BLOG_POSTS } from "@/lib/dummy-data";
-import type { ProductsAction } from "@/hooks/use-products";
+import { DUMMY_BLOG_POSTS } from "@/lib/dummy-data";
 import type { BlogAction } from "@/hooks/use-blog";
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -66,94 +64,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
     <CartContext.Provider value={{ state, addToCart, updateQuantity, removeFromCart, clearCart, cart, totalPrice }}>
       {children}
     </CartContext.Provider>
-  );
-}
-
-const productsReducer = (state: { products: Product[] }, action: ProductsAction): { products: Product[] } => {
-  switch (action.type) {
-    case 'ADD_PRODUCT':
-      return {
-        ...state,
-        products: [action.payload, ...state.products],
-      };
-    case 'UPDATE_PRODUCT':
-        return {
-            ...state,
-            products: state.products.map(p => p.id === action.payload.productId ? { ...p, ...action.payload.productData } : p)
-        }
-    case 'REMOVE_PRODUCT':
-      return {
-        ...state,
-        products: state.products.filter(p => p.id !== action.payload.productId),
-      };
-    case 'SET_PRODUCTS':
-      return { ...state, products: action.payload };
-    default:
-      return state;
-  }
-};
-
-export function ProductsProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(productsReducer, { products: DUMMY_PRODUCTS });
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    try {
-      const storedProducts = localStorage.getItem('products');
-      if (storedProducts) {
-        const parsedState = JSON.parse(storedProducts);
-        if (parsedState.products && parsedState.products.length > 0) {
-          dispatch({ type: "SET_PRODUCTS", payload: parsedState.products });
-        }
-      }
-    } catch (error) {
-      console.error("Failed to parse products from localStorage", error);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (isClient) {
-      try {
-        localStorage.setItem('products', JSON.stringify(state));
-      } catch (error) {
-        console.error("Failed to save products to localStorage", error);
-      }
-    }
-  }, [state, isClient]);
-
-  const addProduct = (productData: Partial<Product>) => {
-    const newProduct: Product = {
-      id: new Date().getTime().toString(),
-      name: productData.name || '',
-      description: productData.description || '',
-      price: productData.price || 0,
-      unit: productData.unit || 'lb',
-      stock: productData.stock || 0,
-      farmer: productData.farmer || 'My Farm',
-      category: productData.category || 'Uncategorized',
-      rating: 0,
-      reviewCount: 0,
-      imageId: productData.imageUrl ? '' : 'new-product-placeholder',
-      imageUrl: productData.imageUrl,
-    };
-    dispatch({ type: 'ADD_PRODUCT', payload: newProduct });
-  };
-  
-  const updateProduct = (productId: string, productData: Partial<Product>) => {
-    dispatch({ type: 'UPDATE_PRODUCT', payload: { productId, productData } });
-  };
-
-  const removeProduct = (productId: string) => {
-    dispatch({ type: 'REMOVE_PRODUCT', payload: { productId } });
-  };
-
-  const products = isClient ? state.products : DUMMY_PRODUCTS;
-
-  return (
-    <ProductsContext.Provider value={{ state, addProduct, updateProduct, removeProduct, products }}>
-      {children}
-    </ProductsContext.Provider>
   );
 }
 
@@ -231,11 +141,9 @@ export function BlogProvider({ children }: { children: ReactNode }) {
 export function Providers({ children }: { children: ReactNode }) {
   return (
     <CartProvider>
-        <ProductsProvider>
-            <BlogProvider>
-                {children}
-            </BlogProvider>
-        </ProductsProvider>
+      <BlogProvider>
+          {children}
+      </BlogProvider>
     </CartProvider>
   );
 }

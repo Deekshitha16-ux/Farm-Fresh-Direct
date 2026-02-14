@@ -11,56 +11,60 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useProducts } from '@/hooks/use-products';
 import type { Product } from '@/lib/types';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { useDoc, useFirestore, updateDocumentNonBlocking, useMemoFirebase } from '@/firebase';
+import { doc } from 'firebase/firestore';
 
 export function EditProductForm({ productId }: { productId: string }) {
-    const { products, updateProduct } = useProducts();
     const { user } = useUserProfile();
-    const product = products.find(p => p.id === productId);
-
     const { toast } = useToast();
     const router = useRouter();
+    const firestore = useFirestore();
+
+    const productDocRef = useMemoFirebase(() => doc(firestore, 'products', productId), [firestore, productId]);
+    const { data: product, isLoading: isProductLoading } = useDoc<Product>(productDocRef);
 
     // Form State
-    const [produceType, setProduceType] = useState("");
+    const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [price, setPrice] = useState("");
     const [unit, setUnit] = useState("");
     const [stock, setStock] = useState("");
-    const [origin, setOrigin] = useState("");
     const [category, setCategory] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
     
     useEffect(() => {
         if (product) {
             // Security check: only allow farmer to edit their own product
-            if (user?.role !== 'farmer' || user.farmName !== product.farmer) {
+            if (user?.role !== 'farmer' || user.uid !== product.farmerId) {
                 toast({ title: "Unauthorized", description: "You can only edit your own products.", variant: "destructive" });
                 router.push('/dashboard/products');
                 return;
             }
 
-            setProduceType(product.name);
+            setName(product.name);
             setDescription(product.description);
             setPrice(product.price.toString());
             setUnit(product.unit);
             setStock(product.stock.toString());
-            setOrigin(product.farmer);
             setCategory(product.category);
             setImagePreview(product.imageUrl || null);
         }
     }, [product, user, router, toast]);
 
-    if (!product) {
+    if (isProductLoading) {
        return <p>Loading product...</p>;
     }
     
-    if (user?.role !== 'farmer' || user.farmName !== product.farmer) {
-        return <p>Unauthorized.</p>;
+    if (!product) {
+        return <p>Product not found.</p>;
     }
 
+    if (user?.role !== 'farmer' || user.uid !== product.farmerId) {
+        return <p>Unauthorized.</p>;
+    }
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -77,27 +81,28 @@ export function EditProductForm({ productId }: { productId: string }) {
 
     const handleUpdateProduct = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSaving(true);
 
         const updatedProductData: Partial<Product> = {
-            name: produceType,
+            name,
             description,
             price: parseFloat(price) || 0,
             unit,
             stock: parseInt(stock, 10) || 0,
             category,
-            farmer: origin,
             imageUrl: imagePreview || undefined,
+            updatedAt: new Date().toISOString(),
         };
         
-        updateProduct(productId, updatedProductData);
+        updateDocumentNonBlocking(productDocRef, updatedProductData);
         
         toast({
             title: "Product Updated",
-            description: `"${produceType}" has been updated successfully.`,
+            description: `"${name}" has been updated successfully.`,
         });
         router.push('/dashboard/products');
+        setIsSaving(false);
     }
-
 
     return (
         <Card>
@@ -111,7 +116,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                         <div className="md:col-span-2 grid gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="product-name">Product Name</Label>
-                                <Input id="product-name" placeholder="e.g., Organic Apples" value={produceType} onChange={(e) => setProduceType(e.target.value)} required />
+                                <Input id="product-name" placeholder="e.g., Organic Apples" value={name} onChange={(e) => setName(e.target.value)} required />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="description">Description</Label>
@@ -152,7 +157,7 @@ export function EditProductForm({ productId }: { productId: string }) {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={origin} required disabled />
+                                <Input id="origin" value={product.farmer} required disabled />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
@@ -171,7 +176,9 @@ export function EditProductForm({ productId }: { productId: string }) {
                         </div>
                     </div>
                     <div className="mt-8 flex justify-end">
-                        <Button type="submit">Save Changes</Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? "Saving..." : "Save Changes"}
+                        </Button>
                     </div>
                 </form>
             </CardContent>

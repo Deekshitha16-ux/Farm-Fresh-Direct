@@ -13,7 +13,7 @@ import { useProducts } from "@/hooks/use-products";
 import type { Product } from "@/lib/types";
 
 export default function ProductsPage() {
-  const { products } = useProducts();
+  const { products, isLoading } = useProducts();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['All']);
   const [selectedFarmers, setSelectedFarmers] = useState<string[]>(['All']);
@@ -148,12 +148,13 @@ export default function ProductsPage() {
                 </Select>
               </div>
               <div className="mt-8 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredAndSortedProducts.length > 0 ? (
+                {isLoading && <p>Loading products...</p>}
+                {!isLoading && filteredAndSortedProducts.length > 0 ? (
                   filteredAndSortedProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))
                 ) : (
-                  <p>No products match your filters.</p>
+                  !isLoading && <p>No products match your filters.</p>
                 )}
               </div>
             </div>

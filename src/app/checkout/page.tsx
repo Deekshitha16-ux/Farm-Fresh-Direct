@@ -12,15 +12,34 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore, addDocumentNonBlocking } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Order, OrderItem } from '@/lib/types';
+import { useState } from 'react';
 
 export default function CheckoutPage() {
     const { cart, totalPrice, clearCart } = useCart();
     const { user } = useUserProfile();
     const { toast } = useToast();
     const router = useRouter();
+    const firestore = useFirestore();
+
+    const [shippingInfo, setShippingInfo] = useState({
+        firstName: user?.displayName?.split(' ')[0] || '',
+        lastName: user?.displayName?.split(' ').slice(1).join(' ') || '',
+        address: '',
+        city: '',
+        state: '',
+        zip: '',
+    });
+     const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const { id, value } = e.target;
+        setShippingInfo(prev => ({ ...prev, [id]: value }));
+    }
 
     if (cart.length === 0) {
-        // Redirect to home if cart is empty, maybe show a toast
         if (typeof window !== 'undefined') {
             router.push('/');
         }
@@ -29,16 +48,54 @@ export default function CheckoutPage() {
 
     const handlePlaceOrder = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        // In a real app, you'd process payment here
-        
-        toast({
-            title: "Order Placed!",
-            description: "Thank you for your purchase. Your fresh produce is on its way!",
-        });
+        if (!user) {
+            toast({ title: "Please log in", description: "You must be logged in to place an order.", variant: "destructive" });
+            return;
+        }
+        setIsPlacingOrder(true);
 
-        clearCart();
-        router.push('/dashboard');
+        const orderItems: OrderItem[] = cart.map(item => ({
+            product: item.product,
+            quantity: item.quantity,
+            pricePerUnit: item.product.price,
+            subtotal: item.product.price * item.quantity,
+            productId: item.product.id,
+            farmerId: item.product.farmerId,
+        }));
+
+        const farmerIds = [...new Set(cart.map(item => item.product.farmerId))];
+
+        const newOrder: Order = {
+            customerId: user.uid,
+            customerName: user.displayName || 'Unknown',
+            orderDate: new Date().toISOString(),
+            totalAmount: totalPrice + 5.00, // including shipping
+            status: 'Pending',
+            shippingAddress: `${shippingInfo.address}, ${shippingInfo.city}, ${shippingInfo.state} ${shippingInfo.zip}`,
+            items: orderItems,
+            farmerIds: farmerIds
+        };
+        
+        const ordersRef = collection(firestore, 'orders');
+        addDocumentNonBlocking(ordersRef, newOrder)
+            .then(() => {
+                toast({
+                    title: "Order Placed!",
+                    description: "Thank you for your purchase. Your fresh produce is on its way!",
+                });
+                clearCart();
+                router.push('/dashboard');
+            })
+            .catch(err => {
+                 toast({
+                    title: "Order Failed",
+                    description: "There was a problem placing your order. Please try again.",
+                    variant: "destructive",
+                });
+            })
+            .finally(() => {
+                setIsPlacingOrder(false);
+            });
     };
 
     return (
@@ -64,30 +121,30 @@ export default function CheckoutPage() {
                                     <form id="checkout-form" onSubmit={handlePlaceOrder} className="space-y-4">
                                         <div className="grid grid-cols-2 gap-4">
                                             <div className="space-y-2">
-                                                <Label htmlFor="first-name">First Name</Label>
-                                                <Input id="first-name" defaultValue={user?.displayName?.split(' ')[0]} required/>
+                                                <Label htmlFor="firstName">First Name</Label>
+                                                <Input id="firstName" value={shippingInfo.firstName} onChange={handleInputChange} required/>
                                             </div>
                                             <div className="space-y-2">
-                                                <Label htmlFor="last-name">Last Name</Label>
-                                                <Input id="last-name" defaultValue={user?.displayName?.split(' ').slice(1).join(' ')} required/>
+                                                <Label htmlFor="lastName">Last Name</Label>
+                                                <Input id="lastName" value={shippingInfo.lastName} onChange={handleInputChange} required/>
                                             </div>
                                         </div>
                                          <div className="space-y-2">
                                             <Label htmlFor="address">Address</Label>
-                                            <Input id="address" placeholder="123 Farm Road" required/>
+                                            <Input id="address" placeholder="123 Farm Road" value={shippingInfo.address} onChange={handleInputChange} required/>
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="space-y-2">
                                                 <Label htmlFor="city">City</Label>
-                                                <Input id="city" placeholder="Greenville" required/>
+                                                <Input id="city" placeholder="Greenville" value={shippingInfo.city} onChange={handleInputChange} required/>
                                             </div>
                                             <div className="space-y-2">
                                                 <Label htmlFor="state">State</Label>
-                                                <Input id="state" placeholder="CA" required/>
+                                                <Input id="state" placeholder="CA" value={shippingInfo.state} onChange={handleInputChange} required/>
                                             </div>
                                              <div className="space-y-2">
                                                 <Label htmlFor="zip">ZIP Code</Label>
-                                                <Input id="zip" placeholder="90210" required/>
+                                                <Input id="zip" placeholder="90210" value={shippingInfo.zip} onChange={handleInputChange} required/>
                                             </div>
                                         </div>
                                     </form>
@@ -122,7 +179,9 @@ export default function CheckoutPage() {
                                         <span>Total</span>
                                         <span>${(totalPrice + 5).toFixed(2)}</span>
                                     </div>
-                                    <Button type="submit" form="checkout-form" className="w-full" size="lg">Place Order</Button>
+                                    <Button type="submit" form="checkout-form" className="w-full" size="lg" disabled={isPlacingOrder}>
+                                        {isPlacingOrder ? 'Placing Order...' : 'Place Order'}
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>

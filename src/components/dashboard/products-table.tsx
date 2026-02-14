@@ -20,30 +20,30 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { useProducts } from "@/hooks/use-products";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
 import type { Product } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 import { useUserProfile } from "@/hooks/use-user-profile";
+import { useFirestore, useCollection, deleteDocumentNonBlocking, useMemoFirebase } from "@/firebase";
+import { collection, query, where, doc } from "firebase/firestore";
 
 export function ProductsTable() {
-    const { products, removeProduct } = useProducts();
     const { user } = useUserProfile();
+    const firestore = useFirestore();
     const { toast } = useToast();
     const [productToDelete, setProductToDelete] = React.useState<Product | null>(null);
 
-    const farmerProducts = React.useMemo(() => {
-        if (user?.role === 'farmer') {
-            return products.filter(p => p.farmer === user.farmName);
-        }
-        // Return empty array if not a farmer, as this view is for farmers
-        return [];
-    }, [products, user]);
-
+    const farmerProductsQuery = useMemoFirebase(() => {
+        if (!user || user.role !== 'farmer') return null;
+        return query(collection(firestore, 'products'), where('farmerId', '==', user.uid));
+    }, [user, firestore]);
+    
+    const { data: farmerProducts, isLoading } = useCollection<Product>(farmerProductsQuery);
 
     const handleDelete = () => {
         if (productToDelete) {
-            removeProduct(productToDelete.id);
+            const productDocRef = doc(firestore, 'products', productToDelete.id);
+            deleteDocumentNonBlocking(productDocRef);
             toast({
                 title: "Product Deleted",
                 description: `"${productToDelete.name}" has been deleted successfully.`,
@@ -64,6 +64,10 @@ export function ProductsTable() {
                 </CardContent>
             </Card>
         );
+    }
+    
+    if (isLoading) {
+        return <p>Loading products...</p>
     }
 
     return (
@@ -90,7 +94,7 @@ export function ProductsTable() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {farmerProducts.map(product => {
+                            {farmerProducts?.map(product => {
                                 let imageUrl = product.imageUrl;
                                 if (!imageUrl) {
                                     const productImage = PlaceHolderImages.find(p => p.id === product.imageId);
@@ -138,6 +142,9 @@ export function ProductsTable() {
                             })}
                         </TableBody>
                     </Table>
+                    {farmerProducts && farmerProducts.length === 0 && !isLoading && (
+                        <p className="p-4 text-center text-muted-foreground">You haven't added any products yet.</p>
+                    )}
                 </CardContent>
             </Card>
             <AlertDialog open={!!productToDelete} onOpenChange={(open) => !open && setProductToDelete(null)}>

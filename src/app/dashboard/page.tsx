@@ -6,13 +6,21 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { DollarSign, Package, Users, Activity } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { DUMMY_ORDERS, DUMMY_PRODUCTS, DUMMY_USERS } from "@/lib/dummy-data";
 import { useUserProfile } from "@/hooks/use-user-profile";
-import type { Order } from "@/lib/types";
+import type { Order, OrderItem } from "@/lib/types";
+import { useFirestore, useCollection, useMemoFirebase } from "@/firebase";
+import { collection, query, where } from "firebase/firestore";
 
 function CustomerDashboard() {
     const { user } = useUserProfile();
-    const myOrders = DUMMY_ORDERS.filter(o => o.userId === user?.id);
+    const firestore = useFirestore();
+
+    const ordersQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, 'orders'), where('customerId', '==', user.uid));
+    }, [user, firestore]);
+
+    const { data: myOrders, isLoading } = useCollection<Order>(ordersQuery);
 
     return (
         <div>
@@ -26,6 +34,7 @@ function CustomerDashboard() {
                         <CardDescription>An overview of your order history.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {isLoading && <p>Loading orders...</p>}
                          <Table>
                             <TableHeader>
                                 <TableRow>
@@ -36,18 +45,21 @@ function CustomerDashboard() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {myOrders.map(order => (
+                                {myOrders?.map(order => (
                                     <TableRow key={order.id}>
                                         <TableCell>
-                                            <div className="font-medium">{order.id}</div>
+                                            <div className="font-medium truncate max-w-[100px]">{order.id}</div>
                                         </TableCell>
-                                        <TableCell>{new Date(order.date).toLocaleDateString()}</TableCell>
+                                        <TableCell>{new Date(order.orderDate).toLocaleDateString()}</TableCell>
                                         <TableCell><Badge>{order.status}</Badge></TableCell>
-                                        <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">${order.totalAmount.toFixed(2)}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
+                         {myOrders && myOrders.length === 0 && !isLoading && (
+                            <p className="p-4 text-center text-muted-foreground">You haven't placed any orders yet.</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>
@@ -57,56 +69,50 @@ function CustomerDashboard() {
 
 function FarmerDashboard() {
     const { user } = useUserProfile();
+    const firestore = useFirestore();
+
+    const ordersQuery = useMemoFirebase(() => {
+        if (!user) return null;
+        return query(collection(firestore, 'orders'), where('farmerIds', 'array-contains', user.uid));
+    }, [user, firestore]);
+
+    const productsQuery = useMemoFirebase(() => {
+        if(!user) return null;
+        return query(collection(firestore, 'products'), where('farmerId', '==', user.uid));
+    }, [user, firestore]);
+
+    const { data: farmerOrders, isLoading: isLoadingOrders } = useCollection<Order>(ordersQuery);
+    const { data: farmerProducts, isLoading: isLoadingProducts } = useCollection(productsQuery);
 
     const stats = useMemo(() => {
-        if (!user || user.role !== 'farmer' || !user.farmName) {
+        if (!user || !farmerOrders || user.role !== 'farmer') {
             return {
                 totalRevenue: 0,
                 customerIds: new Set(),
-                productCount: 0,
                 activeOrders: [],
                 recentOrders: [],
             };
         }
 
-        const myFarmName = user.farmName;
         let totalRevenue = 0;
         const customerIds = new Set<string>();
-        const activeOrders: Order[] = [];
-        const recentOrders: Order[] = [];
 
-        const myProductIds = DUMMY_PRODUCTS
-            .filter(p => p.farmer === myFarmName)
-            .map(p => p.id);
-        
-        const productCount = myProductIds.length;
-
-        for (const order of DUMMY_ORDERS) {
-            let orderContainsMyProduct = false;
-            let revenueFromThisOrder = 0;
-
-            for (const item of order.items) {
-                if (myProductIds.includes(item.product.id)) {
-                    orderContainsMyProduct = true;
-                    revenueFromThisOrder += item.product.price * item.quantity;
-                    customerIds.add(order.userId);
+        farmerOrders.forEach(order => {
+            customerIds.add(order.customerId);
+            order.items.forEach((item: OrderItem) => {
+                if (item.farmerId === user.uid) {
+                    totalRevenue += item.subtotal;
                 }
-            }
-
-            if (orderContainsMyProduct) {
-                totalRevenue += revenueFromThisOrder;
-                recentOrders.push(order);
-                if (order.status === 'Pending' || order.status === 'Shipped') {
-                    activeOrders.push(order);
-                }
-            }
-        }
+            });
+        });
         
-        return { totalRevenue, customerIds, productCount, activeOrders, recentOrders };
+        const activeOrders = farmerOrders.filter(o => o.status === 'Pending' || o.status === 'Shipped');
 
-    }, [user]);
+        return { totalRevenue, customerIds, activeOrders, recentOrders: farmerOrders };
 
-    const { totalRevenue, customerIds, productCount, activeOrders, recentOrders } = stats;
+    }, [user, farmerOrders]);
+
+    const { totalRevenue, customerIds, activeOrders, recentOrders } = stats;
 
     return (
         <div>
@@ -140,7 +146,7 @@ function FarmerDashboard() {
                         <Package className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{productCount}</div>
+                        <div className="text-2xl font-bold">{farmerProducts?.length || 0}</div>
                         <p className="text-xs text-muted-foreground">Currently listed</p>
                     </CardContent>
                 </Card>
@@ -163,6 +169,7 @@ function FarmerDashboard() {
                         <CardDescription>A list of recent orders including your products.</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {isLoadingOrders && <p>Loading orders...</p>}
                         <Table>
                             <TableHeader>
                                 <TableRow>
@@ -173,20 +180,21 @@ function FarmerDashboard() {
                             </TableHeader>
                             <TableBody>
                                 {recentOrders.slice(0, 5).map(order => {
-                                    const customer = DUMMY_USERS.find(u => u.id === order.userId);
                                     return (
                                         <TableRow key={order.id}>
                                             <TableCell>
-                                                <div className="font-medium">{customer?.name || 'Unknown'}</div>
-                                                <div className="text-sm text-muted-foreground">{customer?.email || 'N/A'}</div>
+                                                <div className="font-medium">{order.customerName || 'Unknown'}</div>
                                             </TableCell>
                                             <TableCell><Badge>{order.status}</Badge></TableCell>
-                                            <TableCell className="text-right">${order.total.toFixed(2)}</TableCell>
+                                            <TableCell className="text-right">${order.totalAmount.toFixed(2)}</TableCell>
                                         </TableRow>
                                     );
                                 })}
                             </TableBody>
                         </Table>
+                         {recentOrders && recentOrders.length === 0 && !isLoadingOrders && (
+                            <p className="p-4 text-center text-muted-foreground">You have no orders yet.</p>
+                        )}
                     </CardContent>
                 </Card>
             </div>

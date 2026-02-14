@@ -1,265 +1,65 @@
-/**
- * This Firestore Security Ruleset is designed for the "Farm Fresh Direct" application.
- *
- * Core Philosophy:
- * The security model implements a multi-tiered access system. It provides public read access
- * for browsing data like farms, products, and categories, while strictly enforcing ownership
- * for all write operations. Private user data, such as profiles and orders, is kept
- * completely confidential and accessible only to the user who owns it.
- *
- * Data Structure:
- * The data is organized into several top-level collections for discoverability and user-specific
- * subcollections for privacy.
- * - `/users/{userId}`: Contains private user profiles and their associated private subcollections like `/orders`.
- * - `/farms`, `/products`, `/categories`: Top-level collections for publicly browsable data.
- * - `/farms/{farmId}/...`: Subcollections for farm-specific content like blog posts.
- *
- * Key Security Decisions:
- * - Default Deny: All paths are closed by default. Access is only granted through explicit `allow` rules.
- * - Public vs. Private Data: Publicly viewable content (e.g., published blog posts) and private
- *   data (e.g., blog drafts) are stored in separate collections (`published_blog_posts` vs.
- *   `draft_blog_posts`) to create a secure and performant barrier between them.
- * - No User Listing: It is not possible to list all documents in the `/users` collection,
- *   protecting user privacy.
- * - Admin-Managed Collections: Collections like `/categories` are treated as globally readable but
- *   are not writable by users, awaiting a future admin role implementation.
- *
- * Denormalization for Authorization:
- * To ensure rules are fast and efficient, we avoid cross-document `get()` calls for most
- * authorization checks. Key ownership information is denormalized (copied) onto documents.
- * For example, a `Product` document contains a `farmerId` field, allowing rules to directly
- * verify if the currently signed-in user is the owner of the product's farm without needing to
- * read the `/farms/{farmId}` document. This pattern is crucial for securing writes on public collections.
- */
+
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Helper functions to improve readability and maintainability.
-
-    /**
-     * Checks if a user is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * Checks if the requesting user's UID matches the provided userId.
-     */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
-
-    /**
-     * Checks if a document currently exists.
-     */
-    function isExistingDocument() {
-      return resource != null;
-    }
-
-    /**
-     * Validates that the requesting user is the owner of an existing document.
-     * Combines ownership check with an existence check for all update/delete operations.
-     */
-    function isOwnerOfExistingDoc(userId) {
-      return isOwner(userId) && isExistingDocument();
-    }
-
-    /**
-     * Checks the parent farm document to see if the requesting user is the owner.
-     * This is required for securing 'list' operations on a farm's private subcollections.
-     */
-    function isFarmOwner(farmId) {
-      return isSignedIn() && get(/databases/$(database)/documents/farms/$(farmId)).data.farmerId == request.auth.uid;
+    
+    function isFarmer() {
+        return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.userType == 'farmer';
     }
     
-    /**
-     * On create, validates that the document's internal `id` field matches the user's auth UID.
-     */
-    function isCreatingOwnProfile(userId) {
-      return isOwner(userId) && request.resource.data.id == userId;
+    function isFarmerOfProduct(productId) {
+        let product = get(/databases/$(database)/documents/products/$(productId)).data;
+        return product.farmerId == request.auth.uid;
     }
 
-    /**
-     * On update, validates that the user profile's `id` field is immutable.
-     */
-    function isProfileIdImmutable() {
-      return request.resource.data.id == resource.data.id;
-    }
-
-    /**
-     * On create, validates the `farmerId` in the new farm data matches the user's auth UID.
-     */
-    function isCreatingOwnFarm() {
-      return isSignedIn() && request.resource.data.farmerId == request.auth.uid;
-    }
-
-    /**
-     * On update, validates the `farmerId` on a farm document is immutable.
-     */
-    function isFarmOwnerIdImmutable() {
-      return request.resource.data.farmerId == resource.data.farmerId;
-    }
-
-    /**
-     * On create, validates that the `customerId` in the order data matches the user's auth UID.
-     */
-    function isCreatingOwnOrder(customerId) {
-      return isOwner(customerId) && request.resource.data.customerId == customerId;
-    }
-    
-    /**
-     * On update, validates the `customerId` on an order is immutable.
-     */
-    function isOrderCustomerIdImmutable() {
-       return request.resource.data.customerId == resource.data.customerId;
-    }
-
-    /**
-     * On create, validates that the `customerId` on a review matches the user's auth UID.
-     */
-    function isCreatingOwnReview() {
-      return isSignedIn() && request.resource.data.customerId == request.auth.uid;
-    }
-
-
-    /**
-     * @description A user can manage their own profile, but cannot see other users' profiles.
-     * @path /users/{userId}
-     * @allow (create) a new user creates their own profile document. `auth.uid == userId`.
-     * @deny (get) a user tries to read another user's profile. `auth.uid != userId`.
-     * @principle Restricts access to a user's own data tree.
-     */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing all users for privacy.
-      allow create: if isCreatingOwnProfile(userId);
-      allow update: if isOwnerOfExistingDoc(userId) && isProfileIdImmutable();
-      allow delete: if isOwnerOfExistingDoc(userId);
+      allow read, write: if isOwner(userId);
     }
-
-    /**
-     * @description Categories are globally readable but are not writable by users.
-     * @path /categories/{categoryId}
-     * @allow (get, list) any user, signed in or not, can read categories.
-     * @deny (create, update, delete) any user attempts to modify the category list.
-     * @principle Defines a public, read-only collection for shared data.
-     */
+    
     match /categories/{categoryId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false; // Managed by platform administrators only.
-      allow update: if false; // Managed by platform administrators only.
-      allow delete: if false; // Managed by platform administrators only.
+        allow read: if true;
+        allow write: if false; // Admin only
     }
 
-    /**
-     * @description Farm profiles are public to browse, but only the owning farmer can manage them.
-     * @path /farms/{farmId}
-     * @allow (update) the farmer who owns the farm updates its description. `auth.uid == resource.data.farmerId`.
-     * @deny (update) a random user tries to change a farm's name. `auth.uid != resource.data.farmerId`.
-     * @principle Enforces document ownership for writes on a publicly readable collection.
-     */
-    match /farms/{farmId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isCreatingOwnFarm();
-      allow update: if isOwnerOfExistingDoc(resource.data.farmerId) && isFarmOwnerIdImmutable();
-      allow delete: if isOwnerOfExistingDoc(resource.data.farmerId);
-    }
-    
-    /**
-     * @description Products are public to browse. The farmer who owns the associated farm can manage them.
-     * @path /products/{productId}
-     * @allow (create) an authenticated farmer lists a new product. `request.auth.uid == request.resource.data.farmerId`.
-     * @deny (delete) a customer tries to delete a product. `auth.uid != resource.data.farmerId`.
-     * @principle Relies on a denormalized `farmerId` to enforce ownership for writes, avoiding costly `get` calls.
-     */
     match /products/{productId} {
-      // CRITICAL: These rules assume a 'farmerId' field is denormalized onto the Product document for authorization.
-      allow get: if true;
-      allow list: if true;
+      allow read: if true;
       allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
-      allow update: if isOwnerOfExistingDoc(resource.data.farmerId) && request.resource.data.farmerId == resource.data.farmerId;
-      allow delete: if isOwnerOfExistingDoc(resource.data.farmerId);
-    }
-    
-    /**
-     * @description Customer orders are private and can only be accessed by the customer who placed them.
-     * @path /users/{customerId}/orders/{orderId}
-     * @allow (get, list) a customer views their own order history. `auth.uid == customerId`.
-     * @deny (get) a user tries to access another customer's order. `auth.uid != customerId`.
-     * @principle Path-based security ensures a user can only access data within their own user tree.
-     */
-    match /users/{customerId}/orders/{orderId} {
-      allow get: if isOwner(customerId);
-      allow list: if isOwner(customerId);
-      allow create: if isCreatingOwnOrder(customerId);
-      allow update: if isOwnerOfExistingDoc(customerId) && isOrderCustomerIdImmutable();
-      allow delete: if isOwnerOfExistingDoc(customerId);
-    }
-    
-    /**
-     * @description Order items are private, inheriting access rules from their parent order.
-     * @path /users/{customerId}/orders/{orderId}/order_items/{orderItemId}
-     * @allow (get) a customer views the items in their own order. `auth.uid == customerId`.
-     * @deny (get) a user tries to access items in another customer's order. `auth.uid != customerId`.
-     * @principle Inherited security from the document path ensures subcollection data is protected.
-     */
-    match /users/{customerId}/orders/{orderId}/order_items/{orderItemId} {
-      allow get: if isOwner(customerId);
-      allow list: if isOwner(customerId);
-      allow create: if isOwner(customerId); // Assumes order already exists and is owned by the user.
-      allow update: if isOwnerOfExistingDoc(customerId);
-      allow delete: if isOwnerOfExistingDoc(customerId);
+      allow update, delete: if isSignedIn() && resource.data.farmerId == request.auth.uid;
     }
 
-    /**
-     * @description Product reviews are public to read. Only the customer who wrote a review can manage it.
-     * @path /products/{productId}/reviews/{reviewId}
-     * @allow (create) a customer posts a review. `request.auth.uid == request.resource.data.customerId`.
-     * @deny (update) a customer tries to edit another customer's review. `auth.uid != resource.data.customerId`.
-     * @principle Enforces document ownership for writes, allowing users to manage their own public contributions.
-     */
+    match /orders/{orderId} {
+      allow read: if isOwner(resource.data.customerId) || (isSignedIn() && request.auth.uid in resource.data.farmerIds);
+      allow create: if isOwner(request.resource.data.customerId);
+      allow update: if isSignedIn() && request.auth.uid in resource.data.farmerIds; // Allow farmer to update status
+      allow delete: if false; // Orders should not be deleted, only cancelled
+    }
+
+    match /farms/{farmId} {
+      allow read: if true;
+      allow create, update, delete: if isOwner(resource.data.farmerId);
+    }
+
     match /products/{productId}/reviews/{reviewId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if isCreatingOwnReview();
-      allow update: if isOwnerOfExistingDoc(resource.data.customerId) && request.resource.data.customerId == resource.data.customerId;
-      allow delete: if isOwnerOfExistingDoc(resource.data.customerId);
+      allow read: if true;
+      allow create: if isOwner(request.resource.data.customerId);
+      allow update, delete: if isOwner(resource.data.customerId);
     }
 
-    /**
-     * @description Published blog posts are public. Only the owning farmer can manage them.
-     * @path /farms/{farmId}/published_blog_posts/{blogPostId}
-     * @allow (list) any user browses the published blog posts for a farm.
-     * @deny (delete) a random user tries to delete a blog post. `auth.uid != resource.data.farmerId`.
-     * @principle Relies on a denormalized `farmerId` on the post to enforce ownership for writes.
-     */
     match /farms/{farmId}/published_blog_posts/{blogPostId} {
-      // CRITICAL: These rules assume a 'farmerId' field is denormalized onto the BlogPost document.
-      allow get: if true;
-      allow list: if true;
-      allow create: if isFarmOwner(farmId) && request.resource.data.farmerId == request.auth.uid;
-      allow update: if isOwnerOfExistingDoc(resource.data.farmerId) && request.resource.data.farmerId == resource.data.farmerId;
-      allow delete: if isOwnerOfExistingDoc(resource.data.farmerId);
+      allow read: if true;
+      allow write: if get(/databases/$(database)/documents/farms/$(farmId)).data.farmerId == request.auth.uid;
     }
 
-    /**
-     * @description Draft blog posts are private to the owning farmer.
-     * @path /farms/{farmId}/draft_blog_posts/{blogPostId}
-     * @allow (get, list) the owning farmer views their draft posts. `isFarmOwner(farmId)` is true.
-     * @deny (get, list) a public user tries to read draft posts. `isFarmOwner(farmId)` is false.
-     * @principle Structural segregation of private data. Uses a `get` call on the parent farm to secure list operations.
-     */
     match /farms/{farmId}/draft_blog_posts/{blogPostId} {
-      // CRITICAL: These rules assume a 'farmerId' field is denormalized onto the BlogPost document.
-      allow get: if isFarmOwner(farmId);
-      allow list: if isFarmOwner(farmId);
-      allow create: if isFarmOwner(farmId) && request.resource.data.farmerId == request.auth.uid;
-      allow update: if isOwnerOfExistingDoc(resource.data.farmerId) && request.resource.data.farmerId == resource.data.farmerId;
-      allow delete: if isOwnerOfExistingDoc(resource.data.farmerId);
+      allow read, write: if get(/databases/$(database)/documents/farms/$(farmId)).data.farmerId == request.auth.uid;
     }
   }
 }

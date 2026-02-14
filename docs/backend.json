@@ -145,6 +145,10 @@
           "type": "string",
           "description": "Reference to the Farm that listed this product. (Relationship: Farm 1:N Product)"
         },
+        "farmerId": {
+          "type": "string",
+          "description": "The UID of the farmer who owns the farm. Denormalized for security rules."
+        },
         "categoryId": {
           "type": "string",
           "description": "Reference to the Category this product belongs to. (Relationship: Category 1:N Product)"
@@ -188,6 +192,7 @@
       "required": [
         "id",
         "farmId",
+        "farmerId",
         "categoryId",
         "name",
         "price",
@@ -209,6 +214,20 @@
         "customerId": {
           "type": "string",
           "description": "Reference to the UserProfile of the customer who placed the order. (Relationship: UserProfile 1:N Order)"
+        },
+        "farmerIds": {
+          "type": "array",
+          "description": "An array of farmer UIDs involved in the order, denormalized for querying.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "items": {
+          "type": "array",
+          "description": "An array of items included in the order.",
+          "items": {
+            "$ref": "#/backend/entities/OrderItem"
+          }
         },
         "orderDate": {
           "type": "string",
@@ -245,6 +264,8 @@
       "required": [
         "id",
         "customerId",
+        "farmerIds",
+        "items",
         "orderDate",
         "totalAmount",
         "status",
@@ -259,14 +280,6 @@
       "type": "object",
       "description": "Represents a single item within an order, capturing the product details at the time of purchase.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the OrderItem entity."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to the Order this item belongs to. (Relationship: Order 1:N OrderItem)"
-        },
         "productId": {
           "type": "string",
           "description": "Reference to the Product that was ordered. (Relationship: Product 1:N OrderItem)"
@@ -274,6 +287,10 @@
         "productName": {
           "type": "string",
           "description": "The name of the product at the time of order (denormalized for historical accuracy)."
+        },
+        "farmerId": {
+          "type": "string",
+          "description": "The UID of the farmer who owns the product. Denormalized for dashboard calculations."
         },
         "quantity": {
           "type": "number",
@@ -289,10 +306,9 @@
         }
       },
       "required": [
-        "id",
-        "orderId",
         "productId",
         "productName",
+        "farmerId",
         "quantity",
         "pricePerUnit",
         "subtotal"
@@ -407,13 +423,7 @@
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores individual user profiles (customers and farmers). This is private data; only the user corresponding to `userId` can read/write their own profile. The `userType` field is critical for determining roles in security rules.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, matching `request.auth.uid`."
-            }
-          ]
+          "description": "Stores individual user profiles (customers and farmers). This is private data; only the user corresponding to `userId` can read/write their own profile."
         }
       },
       {
@@ -423,13 +433,7 @@
           "schema": {
             "$ref": "#/backend/entities/Category"
           },
-          "description": "Stores global categories for produce. This collection is publicly readable and managed by platform administrators.",
-          "params": [
-            {
-              "name": "categoryId",
-              "description": "The unique ID of the produce category."
-            }
-          ]
+          "description": "Stores global categories for produce. This collection is publicly readable and managed by platform administrators."
         }
       },
       {
@@ -439,13 +443,7 @@
           "schema": {
             "$ref": "#/backend/entities/Farm"
           },
-          "description": "Stores details about registered farms. Publicly readable for customers to browse. Write access is restricted to the farmer identified by `farmerId` within the document, matching `request.auth.uid`.",
-          "params": [
-            {
-              "name": "farmId",
-              "description": "The unique ID of the farm."
-            }
-          ]
+          "description": "Stores details about registered farms. Publicly readable for customers to browse. Write access is restricted to the farmer identified by `farmerId` within the document, matching `request.auth.uid`."
         }
       },
       {
@@ -455,57 +453,17 @@
           "schema": {
             "$ref": "#/backend/entities/Product"
           },
-          "description": "Lists all produce items for sale. Publicly readable for browsing. Write access is restricted to the farmer who owns the `farmId` associated with this product. This document includes a denormalized `farmerId` field for authorization independence, allowing direct `request.auth.uid` comparison for owner checks.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique ID of the product."
-            }
-          ]
+          "description": "Lists all produce items for sale. Publicly readable for browsing. Write access is restricted to the farmer who owns the `farmId` associated with this product, validated via the denormalized `farmerId`."
         }
       },
       {
-        "path": "/users/{customerId}/orders/{orderId}",
+        "path": "/orders/{orderId}",
         "definition": {
           "entityName": "Order",
           "schema": {
             "$ref": "#/backend/entities/Order"
           },
-          "description": "Stores customer orders. This is private to the customer. Access is restricted to the `customerId` specified in the path, ensuring only the owner of the order can view or manage it.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique ID of the customer who placed the order."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique ID of the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{customerId}/orders/{orderId}/order_items/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Stores individual items within a customer's order. This is private to the customer, inheriting access control from its parent `Order` via the path, ensuring only the owner of the order can view its items.",
-          "params": [
-            {
-              "name": "customerId",
-              "description": "The unique ID of the customer who placed the order."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique ID of the parent order."
-            },
-            {
-              "name": "orderItemId",
-              "description": "The unique ID of the order item."
-            }
-          ]
+          "description": "Stores customer orders. Customer can read/write their own orders. Farmers can read orders that contain their products."
         }
       },
       {
@@ -515,17 +473,7 @@
           "schema": {
             "$ref": "#/backend/entities/ProductReview"
           },
-          "description": "Stores customer reviews for specific products. Publicly readable for all users. Write access is restricted to the `customerId` who created the review. Includes denormalized `farmId` (from the product) and `farmerId` (owner of the farm) for authorization independence, enabling the farmer to view or potentially moderate reviews for their products without `get()` calls.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique ID of the product being reviewed."
-            },
-            {
-              "name": "reviewId",
-              "description": "The unique ID of the product review."
-            }
-          ]
+          "description": "Stores customer reviews for specific products. Publicly readable. Write access is restricted to the customer who created it."
         }
       },
       {
@@ -535,17 +483,7 @@
           "schema": {
             "$ref": "#/backend/entities/BlogPost"
           },
-          "description": "Stores publicly visible blog posts by farms (where `isDraft: false`). Publicly readable. Write access is restricted to the farmer who owns the `farmId`. Includes denormalized `farmerId` for authorization independence, allowing direct `request.auth.uid` comparison for owner checks.",
-          "params": [
-            {
-              "name": "farmId",
-              "description": "The unique ID of the farm that published the blog post."
-            },
-            {
-              "name": "blogPostId",
-              "description": "The unique ID of the blog post."
-            }
-          ]
+          "description": "Stores publicly visible blog posts by farms (where `isDraft: false`). Publicly readable. Write access is restricted to the owning farmer."
         }
       },
       {
@@ -555,20 +493,9 @@
           "schema": {
             "$ref": "#/backend/entities/BlogPost"
           },
-          "description": "Stores private blog post drafts by farms (where `isDraft: true`). Private access, restricted to the farmer who owns the `farmId`. Includes denormalized `farmerId` for authorization independence, allowing direct `request.auth.uid` comparison for owner checks.",
-          "params": [
-            {
-              "name": "farmId",
-              "description": "The unique ID of the farm that owns the draft blog post."
-            },
-            {
-              "name": "blogPostId",
-              "description": "The unique ID of the blog post draft."
-            }
-          ]
+          "description": "Stores private blog post drafts by farms (where `isDraft: true`). Private access, restricted to the owning farmer."
         }
       }
-    ],
-    "reasoning": "The Firestore structure is designed following the core principles of Authorization Independence, Structural Segregation, and Access Modeling to ensure a secure, scalable, and debuggable system for Farm Fresh Direct. \n\n**Authorization Independence:**\n*   **User Profile and Orders:** User profiles (`/users/{userId}`) and their associated orders (`/users/{userId}/orders/{orderId}`) and order items (`/users/{userId}/orders/{orderId}/order_items/{orderItemId}`) leverage path-based authorization. The `userId` is embedded directly in the path, making `request.auth.uid` comparison immediate and removing the need for `get()` operations on parent documents for authorization checks. \n*   **Farms, Products, Blog Posts, and Reviews:** For entities with cross-collection authorization needs, key fields are denormalized. \n    *   `Product` documents will include `farmerId` (the owner of the farm listing the product) in addition to `farmId`. This allows a farmer to manage their products without performing a `get()` on the `Farm` document. Rules can directly check `request.auth.uid == resource.data.farmerId`.\n    *   `BlogPost` documents (both published and draft) will include `farmerId` for the same reason, enabling a farmer to manage their blog content independently.\n    *   `ProductReview` documents will include `farmId` (from the product) and `farmerId` (from the farm owner of the product). This allows the original customer to modify their review (`request.auth.uid == resource.data.customerId`) and also enables the farmer whose product is being reviewed to potentially moderate or view reviews without needing to fetch the `Product` or `Farm` document during an authorization check.\n*   **Role-Based Access (DBAC):** User roles (`userType: 'customer'` or `'farmer'`) are stored within the `/users/{userId}` profile document. While checking `userType` for a user's *own* actions still requires a `get()` on their profile, this is a foundational lookup, distinct from `get()` calls for hierarchical data dependencies, and is generally accepted as secure and performant for role-based authorization.\n\n**Queryable Authorization Patterns (QAPs):**\n*   **Global Discoverability:** Collections like `/farms`, `/products`, and `/categories` are top-level. This design facilitates efficient global `list` operations (browsing farms, products, or categories) without requiring specific user IDs in the path. Security rules will ensure that only public information is readable by default, while write access is restricted based on `farmerId` or admin roles.\n*   **User-Specific Data:** The `/users/{userId}` hierarchy for `Order` and `OrderItem` ensures that a customer can only list and access their own orders. Firestore queries on these paths are inherently secure, as the `userId` in the path must match `request.auth.uid`.\n*   **Farm-Specific Data:** `BlogPost` and `ProductReview` are nested under `/farms/{farmId}` and `/products/{productId}` respectively, allowing efficient listing of content relevant to a specific farm or product, while denormalized `farmerId` and `customerId` fields handle write permissions.\n\n**Structural Segregation:**\n*   **Blog Posts:** To adhere to the principle of not mixing data with different security postures, `BlogPost` entities are split into two subcollections under a `Farm`:\n    *   `/farms/{farmId}/published_blog_posts/{blogPostId}`: For publicly viewable blog posts (`isDraft: false`).\n    *   `/farms/{farmId}/draft_blog_posts/{blogPostId}`: For private blog drafts (`isDraft: true`), accessible only by the owning farmer. This clearly separates public and private content and simplifies security rules for each."
+    ]
   }
 }

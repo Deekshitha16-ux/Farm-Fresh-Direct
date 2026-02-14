@@ -11,32 +11,33 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { useProducts } from '@/hooks/use-products';
-import type { Product } from '@/lib/types';
 import { useUserProfile } from '@/hooks/use-user-profile';
+import { addDocumentNonBlocking, useFirestore } from '@/firebase';
+import { collection } from 'firebase/firestore';
+import type { Product } from '@/lib/types';
 
 export function NewProductForm() {
     const { toast } = useToast();
     const router = useRouter();
-    const { addProduct } = useProducts();
     const { user } = useUserProfile();
+    const firestore = useFirestore();
 
     // Form State
     const [produceType, setProduceType] = useState("");
     const [description, setDescription] = useState("");
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [price, setPrice] = useState("");
-    const [unit, setUnit] = useState("");
+    const [unit, setUnit] = useState("lb");
     const [stock, setStock] = useState("");
     const [category, setCategory] = useState("");
     const [origin, setOrigin] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
 
     useEffect(() => {
         if (user?.farmName) {
             setOrigin(user.farmName);
         }
     }, [user]);
-
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -53,32 +54,49 @@ export function NewProductForm() {
 
     const handleSaveProduct = (e: React.FormEvent) => {
         e.preventDefault();
+        setIsSaving(true);
 
         if (!user || user.role !== 'farmer' || !origin) {
             toast({ title: "Error", description: "You must be a farmer and specify an origin to add products.", variant: "destructive" });
+            setIsSaving(false);
             return;
         }
 
-        const newProduct: Partial<Product> = {
+        const newProduct: Omit<Product, 'id' | 'rating' | 'reviewCount'> = {
             name: produceType,
             description,
             price: parseFloat(price) || 0,
             unit,
             stock: parseInt(stock, 10) || 0,
             farmer: origin,
+            farmerId: user.uid,
             category,
+            imageId: imagePreview ? '' : 'new-product-placeholder',
             imageUrl: imagePreview || undefined,
         };
-
-        addProduct(newProduct);
         
-        toast({
-            title: "Product Saved",
-            description: `"${produceType}" has been saved successfully.`,
+        const productsRef = collection(firestore, 'products');
+        addDocumentNonBlocking(productsRef, {
+            ...newProduct,
+            rating: 0,
+            reviewCount: 0,
+            listedAt: new Date().toISOString(),
+        }).then(() => {
+            toast({
+                title: "Product Saved",
+                description: `"${produceType}" has been saved successfully.`,
+            });
+            router.push('/dashboard/products');
+        }).catch(err => {
+            toast({
+                title: "Error Saving Product",
+                description: "There was a problem saving your product.",
+                variant: "destructive"
+            });
+        }).finally(() => {
+            setIsSaving(false);
         });
-        router.push('/dashboard/products');
     }
-
 
     return (
         <Card>
@@ -115,7 +133,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="unit">Unit</Label>
-                                <Select value={unit} onValueChange={setUnit}>
+                                <Select value={unit} onValueChange={setUnit} required>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a unit" />
                                     </SelectTrigger>
@@ -137,7 +155,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
-                                <Select value={category} onValueChange={setCategory}>
+                                <Select value={category} onValueChange={setCategory} required>
                                     <SelectTrigger>
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -152,7 +170,9 @@ export function NewProductForm() {
                         </div>
                     </div>
                     <div className="mt-8 flex justify-end">
-                        <Button type="submit">Save Product</Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? 'Saving...' : 'Save Product'}
+                        </Button>
                     </div>
                 </form>
             </CardContent>

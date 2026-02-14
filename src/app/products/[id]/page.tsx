@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { DUMMY_REVIEWS, DUMMY_USERS } from '@/lib/dummy-data';
+import { DUMMY_REVIEWS } from '@/lib/dummy-data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { Header } from '@/components/layout/header';
 import { Footer } from '@/components/layout/footer';
@@ -17,21 +17,36 @@ import { useCart } from '@/hooks/use-cart';
 import { useToast } from '@/hooks/use-toast';
 import { useProducts } from '@/hooks/use-products';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useDoc, useCollection, useFirestore, useMemoFirebase } from '@/firebase';
+import { collection, doc, query, where } from 'firebase/firestore';
+import type { Product, UserProfile } from '@/lib/types';
+
 
 export default function ProductDetailPage({ params }: { params: { id: string } }) {
   const [quantity, setQuantity] = useState(1);
   const { addToCart } = useCart();
   const { toast } = useToast();
-  const { products } = useProducts();
-  
-  const product = products.find((p) => p.id === params.id);
+  const firestore = useFirestore();
+
+  const productDocRef = useMemoFirebase(() => doc(firestore, 'products', params.id), [firestore, params.id]);
+  const { data: product, isLoading: isProductLoading } = useDoc<Product>(productDocRef);
+
+  const farmerQuery = useMemoFirebase(() => {
+    if (!product) return null;
+    return query(collection(firestore, 'users'), where('uid', '==', product.farmerId));
+  }, [product, firestore]);
+  const { data: farmerData } = useCollection<UserProfile>(farmerQuery);
+  const farmer = farmerData?.[0];
+
+  if (isProductLoading) {
+    return <div className="flex min-h-screen flex-col items-center justify-center"><p>Loading Product...</p></div>;
+  }
   
   if (!product) {
     notFound();
   }
 
-  const farmer = DUMMY_USERS.find(user => user.role === 'farmer' && user.farmName === product.farmer);
-  
+  // TODO: Replace with live reviews from Firestore
   const reviews = DUMMY_REVIEWS.filter(r => r.productId === product.id);
   
   let imageUrl = product.imageUrl;
