@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,6 +29,13 @@ export function NewProductForm() {
     const [unit, setUnit] = useState("");
     const [stock, setStock] = useState("");
     const [category, setCategory] = useState("");
+    const [origin, setOrigin] = useState("");
+
+    useEffect(() => {
+        if (user?.farmName) {
+            setOrigin(user.farmName);
+        }
+    }, [user]);
 
 
     const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -126,7 +133,7 @@ export function NewProductForm() {
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="origin">Origin</Label>
-                                <Input id="origin" value={user?.farmName || ''} disabled />
+                                <Input id="origin" value={origin} disabled />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category">Category</Label>
